@@ -152,29 +152,7 @@ public class AuthenticationService implements AuthenticationImp {
 
     @Override
     public String generateToken(Account account) {
-//        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
-//
-//        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-//                .subject(account.getEmail())
-//                .issuer("careermate.com")
-//                .issueTime(new Date())
-//                .expirationTime(new Date(
-//                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
-//                .jwtID(UUID.randomUUID().toString())
-//                .claim("scope", buildScope(account))
-//                .build();
-//
-//        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
-//
-//        JWSObject jwsObject = new JWSObject(header, payload);
-//
-//        try {
-//            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
-//            return jwsObject.serialize();
-//        } catch (JOSEException e) {
-//            log.error("Cannot create token", e);
-//            throw new RuntimeException(e);
-//        }
+/
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
