@@ -105,27 +105,26 @@ public class AuthenticationService implements AuthenticationImp {
 
         if (!authenticated) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        var token = generateToken(user,false);
-        var refreshToken = generateToken(user,true);
+        var token = generateToken(user);
 
-        return AuthenticationResponse.builder().refreshToken(refreshToken).token(token).authenticated(true).build();
+
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
 
     @Override
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
         try {
-            var tokens = List.of(request.getToken(), request.getRefreshToken()); // 2 token
-            for (String token : tokens) {
-                var signToken = verifyToken(token, true);
-                String jit = signToken.getJWTClaimsSet().getJWTID();
-                Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+            var signToken = verifyToken(request.getToken(), true);
 
-                InvalidDateToken invalidatedToken =
-                        InvalidDateToken.builder().id(jit).expiryTime(expiryTime).build();
-                invalidatedTokenRepository.save(invalidatedToken);
-            }
+            String jit = signToken.getJWTClaimsSet().getJWTID();
+            Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+            InvalidDateToken invalidatedToken =
+                    InvalidDateToken.builder().id(jit).expiryTime(expiryTime).build();
+
+            invalidatedTokenRepository.save(invalidatedToken);
         } catch (AppException exception) {
-            log.info("Token already expired or invalid");
+            log.info("Token already expired");
         }
     }
 
@@ -141,19 +140,18 @@ public class AuthenticationService implements AuthenticationImp {
 
         invalidatedTokenRepository.save(invalidatedToken);
 
-        var email = signedJWT.getJWTClaimsSet().getSubject();
+        var username = signedJWT.getJWTClaimsSet().getSubject();
 
         var user =
-                accountRepo.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+                accountRepo.findByEmail(username).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
-        var accesstoken = generateToken(user,false);
-        var refreshtoken = generateToken(user,true);
+        var token = generateToken(user);
 
-        return AuthenticationResponse.builder().refreshToken(refreshtoken).token(accesstoken).authenticated(true).build();
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
 
     @Override
-    public String generateToken(Account account,boolean isRefresh) {
+    public String generateToken(Account account) {
 //        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 //
 //        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
@@ -179,20 +177,18 @@ public class AuthenticationService implements AuthenticationImp {
 //        }
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
-        long duration = isRefresh ? 7 * 24 * 3600 : VALID_DURATION; // refresh 7 ngày, access token ngắn
-        String scope = isRefresh ? "refresh" : buildScope(account);
-
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(account.getEmail())
                 .issuer("careermate.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(duration, ChronoUnit.SECONDS).toEpochMilli()))
+                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
-                .claim("scope", scope)
+                .claim("scope", buildScope(account))
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
+
         JWSObject jwsObject = new JWSObject(header, payload);
 
         try {

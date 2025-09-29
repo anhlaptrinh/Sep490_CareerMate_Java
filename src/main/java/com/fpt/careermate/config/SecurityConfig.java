@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -28,7 +29,10 @@ public class SecurityConfig {
     private CustomJwtDecoder customJwtDecoder;
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
+        httpSecurity
+                .cors(Customizer.withDefaults()) // 👈 enable CORS support
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(request -> request.requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS)
                 .permitAll()
                 .anyRequest()
                 .authenticated());
@@ -45,9 +49,10 @@ public class SecurityConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        corsConfiguration.addAllowedOrigin("*");
+        corsConfiguration.addAllowedOrigin("http://localhost:3000");
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
