@@ -31,7 +31,6 @@ import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.List;
 import java.util.StringJoiner;
 import java.util.UUID;
 
@@ -105,10 +104,16 @@ public class AuthenticationService implements AuthenticationImp {
 
         if (!authenticated) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
-        var token = generateToken(user);
+        String accessToken = generateToken(user,false);
+        String refreshToken = generateToken(user,true);
 
-
-        return AuthenticationResponse.builder().token(token).authenticated(true).build();
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .authenticated(true)
+                .expiresIn(VALID_DURATION)
+                .tokenType("Bearer")
+                .build();
     }
 
     @Override
@@ -142,39 +147,24 @@ public class AuthenticationService implements AuthenticationImp {
 
         var username = signedJWT.getJWTClaimsSet().getSubject();
 
-        var user =
-                accountRepo.findByEmail(username).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+        var user = accountRepo.findByEmail(username)
+                .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
-        var token = generateToken(user);
+        String newAccessToken = generateToken(user,false);
+        String newRefreshToken = generateToken(user,true);
 
-        return AuthenticationResponse.builder().token(token).authenticated(true).build();
+        return AuthenticationResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .authenticated(true)
+                .expiresIn(VALID_DURATION)
+                .tokenType("Bearer")
+                .build();
     }
 
     @Override
-    public String generateToken(Account account) {
-//        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
-//
-//        JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
-//                .subject(account.getEmail())
-//                .issuer("careermate.com")
-//                .issueTime(new Date())
-//                .expirationTime(new Date(
-//                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
-//                .jwtID(UUID.randomUUID().toString())
-//                .claim("scope", buildScope(account))
-//                .build();
-//
-//        Payload payload = new Payload(jwtClaimsSet.toJSONObject());
-//
-//        JWSObject jwsObject = new JWSObject(header, payload);
-//
-//        try {
-//            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
-//            return jwsObject.serialize();
-//        } catch (JOSEException e) {
-//            log.error("Cannot create token", e);
-//            throw new RuntimeException(e);
-//        }
+    public String generateToken(Account account, boolean isRefresh) {
+        long validDuration = (isRefresh) ? REFRESHABLE_DURATION : VALID_DURATION;
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
@@ -182,7 +172,7 @@ public class AuthenticationService implements AuthenticationImp {
                 .issuer("careermate.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(
-                        Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
+                        Instant.now().plus(validDuration, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(account))
                 .build();
@@ -199,6 +189,8 @@ public class AuthenticationService implements AuthenticationImp {
             throw new RuntimeException(e);
         }
     }
+
+
 
 
     @Override

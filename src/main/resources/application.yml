@@ -11,6 +11,6 @@ spring:
       ddl-auto: update      # hoặc validate/create theo nhu cầu
 jwt:
   signerKey: "1TjXchw5FloESb63Kc+DFhTARvpWL4jUGCwfGWxuG5SIf/1y/LgJxHnMqaF6A/ij"
-  valid-duration: 36000 # in second
-  refreshable-duration: 36000 # in second
+  valid-duration: 60 # in second
+  refreshable-duration: 604800 # in second
   # in seconds
