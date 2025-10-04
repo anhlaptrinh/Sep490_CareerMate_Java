@@ -14,11 +14,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE)
 public interface BlogMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "viewCount", ignore = true)
+    @Mapping(target = "averageRating", ignore = true)
+    @Mapping(target = "ratingCount", ignore = true)
+    @Mapping(target = "commentCount", ignore = true)
     @Mapping(target = "publishedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -29,6 +32,9 @@ public interface BlogMapper {
     @Mapping(target = "author", ignore = true)
     @Mapping(target = "status", ignore = true)
     @Mapping(target = "viewCount", ignore = true)
+    @Mapping(target = "averageRating", ignore = true)
+    @Mapping(target = "ratingCount", ignore = true)
+    @Mapping(target = "commentCount", ignore = true)
     @Mapping(target = "publishedAt", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -51,7 +57,7 @@ public interface BlogMapper {
 
     @Named("stringToList")
     default List<String> stringToList(String tags) {
-        if (tags == null || tags.trim().isEmpty()) {
+        if (tags == null || tags.isEmpty()) {
             return Collections.emptyList();
         }
         return Arrays.stream(tags.split(","))

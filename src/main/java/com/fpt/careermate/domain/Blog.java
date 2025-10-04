@@ -43,6 +43,15 @@ public class Blog {
     @Column(name = "view_count")
     Integer viewCount;
 
+    @Column(name = "average_rating")
+    Double averageRating;
+
+    @Column(name = "rating_count")
+    Integer ratingCount;
+
+    @Column(name = "comment_count")
+    Integer commentCount;
+
     @Column(name = "published_at")
     LocalDateTime publishedAt;
 
@@ -79,4 +88,3 @@ public class Blog {
         ARCHIVED
     }
 }
-

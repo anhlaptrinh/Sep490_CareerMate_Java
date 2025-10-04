@@ -19,8 +19,15 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(1009,"Your is email existed" ,HttpStatus.BAD_REQUEST ),
     BLOG_NOT_FOUND(1010, "Blog not found", HttpStatus.NOT_FOUND),
     BLOG_INVALID_STATUS(1011, "Invalid blog status", HttpStatus.BAD_REQUEST),
-    BLOG_UNAUTHORIZED(1012, "You are not authorized to modify this blog", HttpStatus.FORBIDDEN);
-
+    BLOG_UNAUTHORIZED(1012, "You are not authorized to modify this blog", HttpStatus.FORBIDDEN),
+    BLOG_NOT_EXISTED(1013, "Blog does not exist", HttpStatus.NOT_FOUND),
+    BLOG_NOT_PUBLISHED(1014, "Blog is not published", HttpStatus.BAD_REQUEST),
+    COMMENT_NOT_EXISTED(1015, "Comment does not exist", HttpStatus.NOT_FOUND),
+    COMMENT_UNAUTHORIZED(1016, "You are not authorized to modify this comment", HttpStatus.FORBIDDEN),
+    RATING_NOT_EXISTED(1017, "Rating does not exist", HttpStatus.NOT_FOUND),
+    INVALID_FILE(1018, "Invalid file name or path", HttpStatus.BAD_REQUEST),
+    FILE_STORAGE_ERROR(1019, "Could not store file", HttpStatus.INTERNAL_SERVER_ERROR),
+    INVALID_ROLE(1020, "Invalid role. Only CANDIDATE or RECRUITER allowed during registration", HttpStatus.BAD_REQUEST);
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
