@@ -1,4 +1,4 @@
 package com.fpt.careermate.web.rest;
 
-public class UserController {
+public class PermissionController {
 }
