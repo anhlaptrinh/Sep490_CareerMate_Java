@@ -6,14 +6,18 @@ import com.fpt.careermate.services.dto.response.ApiResponse;
 import com.fpt.careermate.services.dto.response.OrderResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Validated
 @Tag(name = "Order", description = "Manage order")
 @RestController
 @RequestMapping("/api/order")
@@ -26,9 +30,13 @@ public class OrderController {
 
     @Operation(summary = "Create order")
     @PostMapping
-    public ApiResponse<String> createOrder(@RequestParam String packageId) {
+    public ApiResponse<String> createOrder(
+            @RequestParam
+            @Min(value = 1, message = "packageId must be greater than or equal to 1")
+            Integer packageId
+    ) {
         return ApiResponse.<String>builder()
-                .result(orderImp.createOrder(Integer.parseInt(packageId)))
+                .result(orderImp.createOrder(packageId))
                 .code(200)
                 .message("success")
                 .build();
