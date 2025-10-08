@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,11 +32,14 @@ public class SecurityConfig {
             "/api/users/verify-email/**",
             "/api/users/verify-otp",
             "/api/users/change-password/**",
-            "/api/v1/auth/**",
+            "/api" +
+            "/v1/auth/**",
+
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",
             "/swagger-ui/**",
             "/swagger-ui.html",
+            "api/payment/**",
             // Public blog endpoints - no authentication required
             "/blogs",
             "/blogs/**"
