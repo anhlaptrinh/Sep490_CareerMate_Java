@@ -1,5 +1,6 @@
 package com.fpt.careermate.services.dto.request;
 
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -9,6 +10,10 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderCreationRequest {
+
+    @Positive
     int packageId;
+
+    @Positive
     int candidateId;
 }

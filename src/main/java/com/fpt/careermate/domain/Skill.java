@@ -1,11 +1,9 @@
 package com.fpt.careermate.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
-import java.util.List;
 import java.util.Set;
 
 
@@ -15,16 +13,16 @@ import java.util.Set;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
-@Entity(name = "jb_skills")
-public class JdSkill {
+@Entity(name = "skills")
+public class Skill {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
 
-    @NotBlank
+    @Column(length = 100, nullable = false)
     String name;
 
-    @OneToMany(mappedBy = "jdSkill")
+    @OneToMany(mappedBy = "skill")
     Set<JobDescription> jobDescriptions;
 
 }

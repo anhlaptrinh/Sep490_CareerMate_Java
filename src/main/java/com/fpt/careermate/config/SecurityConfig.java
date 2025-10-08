@@ -39,7 +39,6 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "api/payment/**",
-            "api/recruiter/**", // TODO: remove later
     };
     @Autowired
     private CustomJwtDecoder customJwtDecoder;

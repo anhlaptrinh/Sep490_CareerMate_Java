@@ -32,6 +32,19 @@ public enum ErrorCode {
     INVALID_WEBSITE(4000, "Website is not reachable", HttpStatus.BAD_REQUEST),
     INVALID_LOGO_URL(4001, "Logo URL is not reachable", HttpStatus.BAD_REQUEST),
 
+    // 50xx: Skill
+    SKILL_EXISTED(5000, "Skill existed", HttpStatus.BAD_REQUEST),
+
+    // 60xx: Job Posting
+    JOB_POSTING_NOT_FOUND(6000, "Job posting not found", HttpStatus.NOT_FOUND),
+    CANNOT_MODIFY_JOB_POSTING(6001, "Cannot modify job posting if status is CLOSED or EXPIRED", HttpStatus.FORBIDDEN),
+    CANNOT_APPLY_TO_JOB_POSTING(6002, "Cannot apply to job posting if status is not OPEN", HttpStatus.FORBIDDEN),
+    ALREADY_APPLIED_TO_JOB_POSTING(6003, "You have already applied to this job posting", HttpStatus.BAD_REQUEST),
+    JOB_POSTING_EXPIRED(6005, "Job posting is expired", HttpStatus.BAD_REQUEST),
+    CANDIDATE_PROFILE_INCOMPLETE(6006, "Your profile is incomplete. Please complete your profile before applying", HttpStatus.BAD_REQUEST),
+    CANNOT_CLOSE_JOB_POSTING(6007, "Cannot close job posting if status is not OPEN", HttpStatus.FORBIDDEN),
+    INVALID_EXPIRATION_DATE(6008, "Expiration date must be in the future", HttpStatus.BAD_REQUEST),
+
     BLOG_NOT_FOUND(1010, "Blog not found", HttpStatus.NOT_FOUND),
     BLOG_INVALID_STATUS(1011, "Invalid blog status", HttpStatus.BAD_REQUEST),
     BLOG_UNAUTHORIZED(1012, "You are not authorized to modify this blog", HttpStatus.FORBIDDEN),

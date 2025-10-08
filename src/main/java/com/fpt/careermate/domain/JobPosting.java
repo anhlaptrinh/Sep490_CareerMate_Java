@@ -22,30 +22,24 @@ public class JobPosting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
 
-    @NotBlank
+    @Column(nullable = false, unique = true)
     String title;
 
     @NotBlank
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     String description;
 
-    @NotBlank
+    @Column(nullable = false)
     String address;
-
-    @Min(0)
-    Integer salaryFrom;
-
-    @Min(0)
-    Integer salaryTo;
 
     @Column(nullable = false)
     String status;
 
     @Column(nullable = false)
-    LocalDate createdAt;
+    LocalDate expirationDate;
 
     @Column(nullable = false)
-    LocalDate expirationDate;
+    LocalDate createAt;
 
     @OneToMany(mappedBy = "jobPosting")
     Set<JobDescription> jobDescriptions;

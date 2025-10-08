@@ -1,7 +1,6 @@
 package com.fpt.careermate.domain;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -27,5 +26,5 @@ public class JobDescription {
 
     @ManyToOne
     @JoinColumn(name = "skill_id", nullable = false)
-    JdSkill jdSkill;
+    Skill skill;
 }

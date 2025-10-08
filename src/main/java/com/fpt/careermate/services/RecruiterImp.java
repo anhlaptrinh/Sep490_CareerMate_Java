@@ -13,6 +13,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,6 +27,8 @@ public class RecruiterImp implements RecruiterService {
     UrlValidator urlValidator;
     AuthenticationImp authenticationImp;
 
+    @PreAuthorize("hasRole('RECRUITER')")
+    @Override
     public NewRecruiterResponse createRecruiter(RecruiterCreationRequest request) {
         // Check website
         if(!urlValidator.isWebsiteReachable(request.getWebsite())) throw new AppException(ErrorCode.INVALID_WEBSITE);
