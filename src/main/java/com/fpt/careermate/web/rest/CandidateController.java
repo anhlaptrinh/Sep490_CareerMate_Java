@@ -9,6 +9,7 @@ import com.fpt.careermate.services.dto.response.GeneralInfoResponse;
 import com.fpt.careermate.services.dto.response.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -29,7 +30,7 @@ public class CandidateController {
 
     @Operation(summary = "Create or Update candidate profile", description = "Create or Update candidate profile")
     @PostMapping("/profiles")
-    public ApiResponse<CandidateProfileResponse> saveOrUpdateCandidateProfile(@RequestBody CandidateProfileRequest request) {
+    public ApiResponse<CandidateProfileResponse> saveOrUpdateCandidateProfile(@RequestBody @Valid CandidateProfileRequest request) {
         CandidateProfileResponse response = candidateProfileImp.saveOrUpdateCandidateProfile(request);
         return ApiResponse.<CandidateProfileResponse>builder()
                 .code(200)

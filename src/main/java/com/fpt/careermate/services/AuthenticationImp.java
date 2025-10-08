@@ -62,7 +62,7 @@ public class AuthenticationImp implements AuthenticationService {
         boolean isValid = true;
 
         try {
-            verifyToken(token, false);
+            verifyToken(token);
         } catch (AppException e) {
             isValid = false;
         }
@@ -71,20 +71,13 @@ public class AuthenticationImp implements AuthenticationService {
     }
 
     @Override
-    public SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
+    public SignedJWT verifyToken(String token) throws JOSEException, ParseException {
 
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
         SignedJWT signedJWT = SignedJWT.parse(token);
 
-        Date expiryTime = (isRefresh)
-                ? new Date(signedJWT
-                .getJWTClaimsSet()
-                .getIssueTime()
-                .toInstant()
-                .plus(REFRESHABLE_DURATION, ChronoUnit.SECONDS)
-                .toEpochMilli())
-                : signedJWT.getJWTClaimsSet().getExpirationTime();
+        Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
         var verified = signedJWT.verify(verifier);
 
@@ -124,7 +117,7 @@ public class AuthenticationImp implements AuthenticationService {
     @Override
     public void logout(LogoutRequest request) throws ParseException, JOSEException {
         try {
-            var signToken = verifyToken(request.getToken(), true);
+            var signToken = verifyToken(request.getToken());
 
             String jit = signToken.getJWTClaimsSet().getJWTID();
             Date expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
@@ -140,7 +133,7 @@ public class AuthenticationImp implements AuthenticationService {
 
     @Override
     public AuthenticationResponse refreshToken(RefreshRequest request) throws ParseException, JOSEException {
-        var signedJWT = verifyToken(request.getToken(), true);
+        var signedJWT = verifyToken(request.getToken());
 
         var jit = signedJWT.getJWTClaimsSet().getJWTID();
         var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
@@ -155,7 +148,7 @@ public class AuthenticationImp implements AuthenticationService {
         var user = accountRepo.findByEmail(username)
                 .orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
 
-        String newAccessToken = generateToken(user, false);
+        String newAccessToken = request.getToken();
         String newRefreshToken = generateToken(user, true);
 
         return AuthenticationResponse.builder()
