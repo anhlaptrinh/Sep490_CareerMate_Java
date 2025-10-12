@@ -19,8 +19,10 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -209,5 +211,30 @@ public class JobPostingImp implements JobPostingService {
         Optional<Recruiter> currentRecruiter = recruiterRepo.findByAccount_Id(currentAccount.getId());
         return currentRecruiter.get();
     }
+
+    // Scheduler to update job posting status to EXPIRED if expiration date is before today and status is not EXPIRED or DELETED
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void updateExpiredJobPostings() {
+        LocalDate today = LocalDate.now();
+
+        // Get all job postings that need to be expired
+        List<JobPosting> expiredJobs = jobPostingRepo
+                .findByExpirationDateBeforeAndStatusNotIn(today, List.of(StatusJobPosting.EXPIRED, StatusJobPosting.DELETED));
+
+        if (expiredJobs.isEmpty()) {
+            log.info("No job postings to expire today.");
+            return;
+        }
+
+        // Update status to EXPIRED
+        expiredJobs.forEach(jp -> jp.setStatus(StatusJobPosting.EXPIRED));
+
+        // Save all updated job postings in batch
+        jobPostingRepo.saveAll(expiredJobs);
+
+        log.info("Updated {} job postings to EXPIRED status.", expiredJobs.size());
+    }
+
 
 }
