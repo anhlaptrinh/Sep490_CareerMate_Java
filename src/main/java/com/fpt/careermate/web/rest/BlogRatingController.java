@@ -4,6 +4,8 @@ import com.fpt.careermate.services.BlogRatingImp;
 import com.fpt.careermate.services.dto.request.BlogRatingRequest;
 import com.fpt.careermate.services.dto.response.ApiResponse;
 import com.fpt.careermate.services.dto.response.BlogRatingResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.models.annotations.OpenAPI30;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class BlogRatingController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Rate a Blog", description = "Submit or update a rating for a specific blog post.")
     public ApiResponse<BlogRatingResponse> rateBlog(
             @PathVariable Long blogId,
             @Valid @RequestBody BlogRatingRequest request) {

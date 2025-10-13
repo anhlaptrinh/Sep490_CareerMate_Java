@@ -4,6 +4,7 @@ import com.fpt.careermate.services.BlogCommentImp;
 import com.fpt.careermate.services.dto.request.BlogCommentRequest;
 import com.fpt.careermate.services.dto.response.ApiResponse;
 import com.fpt.careermate.services.dto.response.BlogCommentResponse;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class BlogCommentController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
+    @Operation (summary = "Create Comment", description = "Create a new comment for a specific blog post")
     public ApiResponse<BlogCommentResponse> createComment(
             @PathVariable Long blogId,
             @Valid @RequestBody BlogCommentRequest request) {
@@ -36,6 +38,7 @@ public class BlogCommentController {
     }
 
     @GetMapping
+    @Operation(summary = "Get Comments by Blog ID", description = "Retrieve comments for a specific blog post with pagination and sorting")
     public ApiResponse<Page<BlogCommentResponse>> getCommentsByBlogId(
             @PathVariable Long blogId,
             @RequestParam(defaultValue = "0") int page,
@@ -56,6 +59,7 @@ public class BlogCommentController {
 
     @PutMapping("/{commentId}")
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update Comment", description = "Update an existing comment by its ID")
     public ApiResponse<BlogCommentResponse> updateComment(
             @PathVariable Long blogId,
             @PathVariable Long commentId,
@@ -68,6 +72,7 @@ public class BlogCommentController {
 
     @DeleteMapping("/{commentId}")
     @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Delete Comment", description = "Delete a comment by its ID")
     public ApiResponse<Void> deleteComment(
             @PathVariable Long blogId,
             @PathVariable Long commentId) {
