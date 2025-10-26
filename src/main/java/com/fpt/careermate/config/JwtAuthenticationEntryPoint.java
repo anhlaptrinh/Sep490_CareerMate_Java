@@ -1,8 +1,8 @@
 package com.fpt.careermate.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fpt.careermate.services.dto.response.ApiResponse;
-import com.fpt.careermate.web.exception.ErrorCode;
+import com.fpt.careermate.common.response.ApiResponse;
+import com.fpt.careermate.common.exception.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

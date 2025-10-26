@@ -1,11 +1,10 @@
 package com.fpt.careermate.config;
 
-import com.fpt.careermate.constant.PredefineRole;
-import com.fpt.careermate.domain.Account;
-import com.fpt.careermate.domain.Role;
-import com.fpt.careermate.repository.AccountRepo;
-import com.fpt.careermate.repository.RoleRepo;
-import org.springframework.http.HttpMethod;
+import com.fpt.careermate.common.constant.PredefineRole;
+import com.fpt.careermate.services.account_services.domain.Account;
+import com.fpt.careermate.services.authentication_services.domain.Role;
+import com.fpt.careermate.services.account_services.repository.AccountRepo;
+import com.fpt.careermate.services.authentication_services.repository.RoleRepo;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

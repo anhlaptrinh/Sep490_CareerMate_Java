@@ -1,6 +1,6 @@
 package com.fpt.careermate.config;
 
-import com.fpt.careermate.services.OAuth2LoginSuccessHandler;
+import com.fpt.careermate.services.authentication_services.web.rest.OAuth2LoginSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

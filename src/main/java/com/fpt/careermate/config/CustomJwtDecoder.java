@@ -1,7 +1,7 @@
 package com.fpt.careermate.config;
 
-import com.fpt.careermate.services.AuthenticationImp;
-import com.fpt.careermate.services.dto.request.IntrospectRequest;
+import com.fpt.careermate.services.authentication_services.service.AuthenticationImp;
+import com.fpt.careermate.services.authentication_services.service.dto.request.IntrospectRequest;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
