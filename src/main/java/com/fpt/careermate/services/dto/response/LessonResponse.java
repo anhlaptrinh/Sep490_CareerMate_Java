@@ -13,5 +13,5 @@ public class LessonResponse {
     int id;
     String title;
     int position;
-    boolean isMarked;
+    boolean marked;
 }

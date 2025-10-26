@@ -23,7 +23,7 @@ public class Lesson {
     @Column(columnDefinition = "TEXT")
     String content;
 
-    boolean isMarked;
+    boolean marked;
 
     @Column(nullable = false)
     int position;

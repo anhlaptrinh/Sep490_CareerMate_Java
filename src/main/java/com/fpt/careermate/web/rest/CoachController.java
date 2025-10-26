@@ -66,4 +66,14 @@ public class CoachController {
                 .build();
     }
 
+    @GetMapping("/course/{courseId}")
+    @Operation(description = "Get course detail by course ID")
+    public ApiResponse<CourseResponse> getCourseById(@PathVariable int courseId) {
+        return ApiResponse.<CourseResponse>builder()
+                .result(coachImp.getCourseById(courseId))
+                .code(200)
+                .message("success")
+                .build();
+    }
+
 }
