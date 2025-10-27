@@ -44,7 +44,7 @@ public class ApiClient {
 
             String respBody = response.getBody();
             if (respBody == null) {
-                throw new AppException(ErrorCode.EXTERNAL_API_ERROR);
+                throw new AppException(ErrorCode.RESPONSE_BODY_EMPTY);
             }
 
             // deserialize into a map if needed
@@ -52,6 +52,7 @@ public class ApiClient {
             return res;
 
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             throw new AppException(ErrorCode.EXTERNAL_API_ERROR);
         }
     }

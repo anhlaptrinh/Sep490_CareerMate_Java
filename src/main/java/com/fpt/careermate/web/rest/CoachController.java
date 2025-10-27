@@ -5,6 +5,7 @@ import com.fpt.careermate.services.CoachImp;
 import com.fpt.careermate.services.dto.response.ApiResponse;
 import com.fpt.careermate.services.dto.response.CourseListResponse;
 import com.fpt.careermate.services.dto.response.CourseResponse;
+import com.fpt.careermate.services.dto.response.QuestionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
@@ -73,6 +74,16 @@ public class CoachController {
     public ApiResponse<CourseResponse> getCourseById(@PathVariable int courseId) {
         return ApiResponse.<CourseResponse>builder()
                 .result(coachImp.getCourseById(courseId))
+                .code(200)
+                .message("success")
+                .build();
+    }
+
+    @PostMapping("/course/lesson/question/generation/{lessonId}")
+    @Operation(description = "if question not exists, generate question for lesson by lesson ID, return existing question otherwise")
+    public ApiResponse<List<QuestionResponse>> generateQuestionList(@PathVariable int lessonId) {
+        return ApiResponse.<List<QuestionResponse>>builder()
+                .result(coachImp.generateQuestionList(lessonId))
                 .code(200)
                 .message("success")
                 .build();

@@ -6,8 +6,10 @@ import com.fpt.careermate.domain.Module;
 import com.fpt.careermate.repository.CandidateRepo;
 import com.fpt.careermate.repository.CourseRepo;
 import com.fpt.careermate.repository.LessonRepo;
+import com.fpt.careermate.repository.QuestionRepo;
 import com.fpt.careermate.services.dto.response.CourseListResponse;
 import com.fpt.careermate.services.dto.response.CourseResponse;
+import com.fpt.careermate.services.dto.response.QuestionResponse;
 import com.fpt.careermate.services.impl.CoachService;
 import com.fpt.careermate.services.mapper.CoachMapper;
 import com.fpt.careermate.util.ApiClient;
@@ -40,6 +42,7 @@ public class CoachImp implements CoachService {
     CourseRepo courseRepo;
     CandidateRepo candidateRepo;
     LessonRepo lessonRepo;
+    QuestionRepo questionRepo;
     AuthenticationImp authenticationImp;
     CoachMapper coachMapper;
 
@@ -183,6 +186,61 @@ public class CoachImp implements CoachService {
         }
 
         return coachMapper.toCourseResponse(exstingCourse.get());
+    }
+
+    @PreAuthorize("hasRole('CANDIDATE')")
+    @Override
+    public List<QuestionResponse> generateQuestionList(int lessonId) {
+        String url = BASE_URL + "generate-course/lesson/question-list";
+
+        // Check if lesson exists
+        Optional<Lesson> exstingLesson = lessonRepo.findById(lessonId);
+        if (exstingLesson.isEmpty()) {
+            throw new AppException(ErrorCode.LESSON_NOT_FOUND);
+        }
+        Lesson lesson = exstingLesson.get();
+
+        // Check if question already exists
+        if(!lesson.getQuestions().isEmpty() || lesson.getQuestions().size() > 0) {
+            return coachMapper.toQuestionResponseList(lesson.getQuestions());
+        }
+
+        Map<String, String> body = Map.of("lesson", lesson.getTitle());
+
+        // Call Django API
+        Map<String, Object> data = apiClient.post(url, apiClient.getToken(), body);
+        List<Map<String, Object>> questions = (List<Map<String, Object>>) data.get("questions");
+        log.info("Generated question: {}", data);
+
+        questions.forEach(question -> {
+            Question q = new Question();
+            q.setTitle((String)  question.get("question"));
+            q.setLesson(lesson);
+            q.setExplanation((String) question.get("explanation"));
+            lesson.getQuestions().add(q);
+
+            List<Map<String, Object>> options = (List<Map<String, Object>>) question.get("options");
+            options.forEach(option -> {
+                Option o = new Option();
+                o.setContent((String) option.get("option"));
+                o.setLabel((String) option.get("label"));
+                o.setQuestion(q);
+                q.getOptions().add(o);
+
+                // Set correct option
+                if (o.getLabel().equals(question.get("correct_option"))) {
+                    q.setCorrectOption(o);
+                }
+            });
+
+            // Save each question
+            questionRepo.save(q);
+        });
+
+        // Return saved questions of a lesson
+        System.out.println("Saved lesson");
+        Optional<Lesson> savedLesson = lessonRepo.findById(lessonId);
+        return coachMapper.toQuestionResponseList(savedLesson.get().getQuestions());
     }
 
     private Candidate getCurrentCandidate() {

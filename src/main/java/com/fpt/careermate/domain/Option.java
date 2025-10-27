@@ -14,27 +14,19 @@ import java.util.List;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
-@Entity(name = "lessons")
-public class Lesson {
+@Entity(name = "options")
+public class Option {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
 
     @Column(nullable = false)
-    String title;
-
-    @Column(columnDefinition = "TEXT")
     String content;
 
-    boolean marked;
-
     @Column(nullable = false)
-    int position;
+    String label;
 
     @ManyToOne
-    @JoinColumn(name = "module_id", nullable = false)
-    Module module;
-
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<Question> questions = new ArrayList<>();
+    @JoinColumn(name = "question_id", nullable = false)
+    Question question;
 }
