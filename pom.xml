@@ -112,6 +112,12 @@
             <artifactId>httpclient5</artifactId>
             <version>5.5</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.weaviate</groupId>
+            <artifactId>client</artifactId>
+            <version>4.7.0</version>  <!-- Check latest version -->
+        </dependency>
     </dependencies>
 
 

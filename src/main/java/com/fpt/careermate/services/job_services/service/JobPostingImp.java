@@ -50,6 +50,7 @@ public class JobPostingImp implements JobPostingService {
     JobDescriptionRepo jobDescriptionRepo;
     JobPostingMapper jobPostingMapper;
     AuthenticationImp authenticationImp;
+    WeaviateImp weaviateImp;
     JobPostingValidator jobPostingValidator;
 
     // Recruiter create job posting
@@ -89,7 +90,11 @@ public class JobPostingImp implements JobPostingService {
 
         jobPosting.setJobDescriptions(jobDescriptions);
 
-        jobPostingRepo.save(jobPosting);
+        // Save to postgres
+        JobPosting saved = jobPostingRepo.save(jobPosting);
+
+        // Add to weaviate
+        weaviateImp.addJobPosting(saved);
     }
 
     // Get all job postings of the current recruiter with all status
