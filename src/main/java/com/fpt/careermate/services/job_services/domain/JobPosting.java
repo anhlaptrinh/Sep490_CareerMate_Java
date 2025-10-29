@@ -68,4 +68,7 @@ public class JobPosting {
 
     @OneToMany(mappedBy = "jobPosting", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<JobApply> jobApplies = new HashSet<>();
+
+    @Column(nullable = false)
+    int yearsOfExperience;
 }

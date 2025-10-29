@@ -21,5 +21,6 @@ public class JobPostingForRecruiterResponse {
     LocalDate expirationDate;
     LocalDate createAt;
     Set<JobPostingSkillResponse> skills;
+    int yearsOfExperience;
 
 }

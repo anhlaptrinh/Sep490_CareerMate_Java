@@ -1,8 +1,6 @@
 package com.fpt.careermate.services.job_services.service.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -32,5 +30,10 @@ public class JobPostingCreationRequest {
 
     @NotNull
     Set<JdSkillRequest> jdSkills;
+
+    @NotNull
+    @Min(0)
+    @Max(100)
+    int yearsOfExperience;
 
 }
