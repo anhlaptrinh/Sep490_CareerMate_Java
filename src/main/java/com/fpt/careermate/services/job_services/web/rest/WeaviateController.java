@@ -30,6 +30,15 @@ public class WeaviateController {
                 .build();
     }
 
+    @PostMapping("/property")
+    ApiResponse<String> addProperty() {
+        weaviateImp.addProperties();
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message("success")
+                .build();
+    }
+
     @DeleteMapping("/collection")
     ApiResponse<String> deleteCollection() {
         weaviateImp.deleteJobPostingCollection();

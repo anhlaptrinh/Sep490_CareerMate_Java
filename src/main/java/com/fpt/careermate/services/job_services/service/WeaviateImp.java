@@ -34,11 +34,16 @@ public class WeaviateImp {
                 .className("JobPosting")
                 .description("Job posting ")
                 .vectorizer("text2vec-weaviate")
+                .moduleConfig(Map.of(
+                        "text2vec-weaviate", Map.of(
+                                "vectorizeClassName", false,
+                                "vectorizePropertyName", true
+                        )
+                ))
                 .properties(List.of(
                         Property.builder().name("jobId").dataType(List.of("int")).build(),
                         Property.builder().name("title").dataType(List.of("string")).build(),
                         Property.builder().name("description").dataType(List.of("string")).build(),
-                        Property.builder().name("skills").dataType(List.of("string[]")).build(),
                         Property.builder().name("address").dataType(List.of("string")).build()
                 ))
                 .build();
@@ -48,6 +53,25 @@ public class WeaviateImp {
                 .run();
 
         log.info("Collection 'JobPosting' created!");
+    }
+
+    public void addProperties() {
+        List<Property> newProperties = List.of(
+                Property.builder()
+                        .name("skills")
+                        .dataType(List.of("string[]"))
+                        .moduleConfig(Map.of("text2vec-weaviate", Map.of("skip", false)))
+                        .build()
+        );
+
+        for (Property property : newProperties) {
+            client.schema().propertyCreator()
+                    .withClassName("JobPosting")
+                    .withProperty(property)
+                    .run();
+
+            log.info("Property '{}' added to 'JobPosting' collection!", property.getName());
+        }
     }
 
     public void getAllCollections() {
