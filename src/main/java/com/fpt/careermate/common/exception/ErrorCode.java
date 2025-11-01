@@ -35,6 +35,8 @@ public enum ErrorCode {
     RECRUITER_ALREADY_APPROVED(4004, "Recruiter profile is already approved", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(4005, "Role not found in system", HttpStatus.INTERNAL_SERVER_ERROR),
     RECRUITER_ALREADY_REJECTED(4006, "Recruiter profile is already rejected", HttpStatus.BAD_REQUEST),
+    ACCOUNT_BANNED(4007, "Your account has been banned. You cannot update your profile.", HttpStatus.FORBIDDEN),
+    CANNOT_UPDATE_NON_REJECTED_PROFILE(4008, "You can only update organization information if your account is REJECTED. Current status allows you to access the system.", HttpStatus.BAD_REQUEST),
 
     // 50xx: JdSkill
     SKILL_EXISTED(5000, "JdSkill existed", HttpStatus.BAD_REQUEST),
