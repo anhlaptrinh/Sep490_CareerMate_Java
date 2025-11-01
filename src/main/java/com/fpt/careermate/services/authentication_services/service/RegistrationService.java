@@ -146,7 +146,8 @@ public class RegistrationService {
 
     /**
      * Reject recruiter account (admin action)
-     * Deletes both account and recruiter profile
+     * Marks the recruiter as REJECTED and stores the rejection reason
+     * Changes account status to REJECTED to prevent login
      */
     @Transactional
     public void rejectRecruiterAccount(int recruiterId, String reason) {
@@ -154,17 +155,24 @@ public class RegistrationService {
                 .orElseThrow(() -> new AppException(ErrorCode.RECRUITER_NOT_FOUND));
 
         Account account = recruiter.getAccount();
-        int accountId = account.getId();
-        String email = account.getEmail();
 
-        // Delete recruiter profile first (due to foreign key)
-        recruiterRepo.delete(recruiter);
+        // Check if already rejected
+        if ("REJECTED".equals(recruiter.getVerificationStatus())) {
+            throw new AppException(ErrorCode.RECRUITER_ALREADY_REJECTED);
+        }
 
-        // Delete account
-        accountRepo.delete(account);
+        // Mark recruiter as rejected and store reason
+        recruiter.setVerificationStatus("REJECTED");
+        recruiter.setRejectionReason(reason != null ? reason : "No reason provided");
 
-        log.info("Recruiter account rejected and deleted. Account ID: {}, Email: {}, Reason: {}",
-                accountId, email, reason);
+        // Change account status to REJECTED to prevent login
+        account.setStatus("REJECTED");
+
+        recruiterRepo.save(recruiter);
+        accountRepo.save(account);
+
+        log.info("Recruiter account rejected. Account ID: {}, Email: {}, Status: {} → REJECTED, Reason: {}",
+                account.getId(), account.getEmail(), account.getStatus(), reason);
     }
 
     /**
