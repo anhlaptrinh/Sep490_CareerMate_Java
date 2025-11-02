@@ -11,7 +11,6 @@ public interface CoachService {
     LessonContentResponse generateLesson(int lessonId) throws JsonProcessingException;
     List<CourseListResponse> getMyCourses();
     void markLesson(int lessonId, boolean marked);
-    CourseResponse getCourseById(int courseId);
     List<QuestionResponse> generateQuestionList(int lessonId);
     List<RecommendedCourseResponse> recommendCourse(String role);
 }

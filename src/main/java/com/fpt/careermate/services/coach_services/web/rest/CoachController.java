@@ -78,16 +78,6 @@ public class CoachController {
                 .build();
     }
 
-    @GetMapping("/course/{courseId}")
-    @Operation(description = "Get course detail by course ID")
-    public ApiResponse<CourseResponse> getCourseById(@PathVariable int courseId) {
-        return ApiResponse.<CourseResponse>builder()
-                .result(coachImp.getCourseById(courseId))
-                .code(200)
-                .message("success")
-                .build();
-    }
-
     @PostMapping("/course/lesson/question/generation/{lessonId}")
     @Operation(description = "if question not exists, generate question for lesson by lesson ID, return existing question otherwise")
     public ApiResponse<List<QuestionResponse>> generateQuestionList(@PathVariable int lessonId) {

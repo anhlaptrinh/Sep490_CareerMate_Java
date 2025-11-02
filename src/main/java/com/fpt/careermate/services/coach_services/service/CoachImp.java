@@ -350,19 +350,6 @@ public class CoachImp implements CoachService {
 
     @PreAuthorize("hasRole('CANDIDATE')")
     @Override
-    public CourseResponse getCourseById(int courseId) {
-        Candidate candidate = getCurrentCandidate();
-        Optional<Course> exstingCourse =
-                courseRepo.findByIdAndCandidate_CandidateId(courseId, candidate.getCandidateId());
-        if (exstingCourse.isEmpty()) {
-            throw new AppException(ErrorCode.COURSE_NOT_FOUND);
-        }
-
-        return coachMapper.toCourseResponse(exstingCourse.get());
-    }
-
-    @PreAuthorize("hasRole('CANDIDATE')")
-    @Override
     public List<QuestionResponse> generateQuestionList(int lessonId) {
         String url = BASE_URL + "generate-course/lesson/question-list";
 
