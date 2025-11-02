@@ -152,7 +152,7 @@ public class CoachImp implements CoachService {
         Map<String, String> courseMap = new HashMap<>();
         courseMap.put("content", jsonString);
         jedis.hset(title, courseMap);
-        jedis.expire(title, 86400); // set expiration time to 24 hours
+//        jedis.expire(title, 86400); // set expiration time to 24 hours
 
 
         // Lưu khóa học vào database
@@ -285,7 +285,7 @@ public class CoachImp implements CoachService {
         return coachMapper.toLessonContentResponse(savedPostgres);
     }
 
-    private Lesson saveLessonContentFromJson(Lesson lesson, String jsonString) throws JsonProcessingException{
+    private Lesson saveLessonContentFromJson(Lesson lesson, String jsonString) throws JsonProcessingException {
         // Parse JSON and set lesson content
         JsonNode root = objectMapper.readTree(jsonString);
         lesson.setLessonOverview(root.get("lesson_overview").asText());
@@ -351,8 +351,6 @@ public class CoachImp implements CoachService {
     @PreAuthorize("hasRole('CANDIDATE')")
     @Override
     public List<QuestionResponse> generateQuestionList(int lessonId) {
-        String url = BASE_URL + "generate-course/lesson/question-list";
-
         // Check if lesson exists
         Optional<Lesson> exstingLesson = lessonRepo.findById(lessonId);
         if (exstingLesson.isEmpty()) {
@@ -360,45 +358,130 @@ public class CoachImp implements CoachService {
         }
         Lesson lesson = exstingLesson.get();
 
-        // Check if question already exists
-        if (!lesson.getQuestions().isEmpty() || lesson.getQuestions().size() > 0) {
-            return coachMapper.toQuestionResponseList(lesson.getQuestions());
+        // Check if questions already exist for the lesson
+        List<Question> existingQuestions = questionRepo.findByLesson_Id(lessonId);
+        if (!existingQuestions.isEmpty()) {
+            log.info("Questions already exist for lesson ID: {}", lessonId);
+            return coachMapper.toQuestionResponseList(existingQuestions);
         }
 
-        Map<String, String> body = Map.of("lesson", lesson.getTitle());
+        // KIểm tra nếu question list chung đã có trong Redis cache
+        boolean existsedRedisQuestion = jedis.exists("question:"+lesson.getTitle());
+        if (existsedRedisQuestion) {
+            // Lưu question list vào postgres từ Redis
+            String jsonString = jedis.hget("question:" + lesson.getTitle(), "content");
+            log.info("Question list found in Redis cache for lesson title: {}", lesson.getTitle());
+            // Parse JSON and save questions to Postgres
+            List<Question> savedQuestions = saveQuestionFromJson(lesson, jsonString);
+            return coachMapper.toQuestionResponseList(savedQuestions);
+        }
 
-        // Call Django API
-        Map<String, Object> data = apiClient.post(url, apiClient.getToken(), body);
-        List<Map<String, Object>> questions = (List<Map<String, Object>>) data.get("questions");
+        // Nếu chưa tồn tại question list chung, tạo question list mới bằng cách gọi mô hình ngôn ngữ lớn (LLM)
+        // Thiết lập vai trò, phong cách, quy tắc
+        SystemMessage systemMessage = new SystemMessage("""
+                You are an expert question generation assistant.
+                """
+        );
 
-        questions.forEach(question -> {
-            Question q = new Question();
-            q.setTitle((String) question.get("question"));
-            q.setLesson(lesson);
-            q.setExplanation((String) question.get("explanation"));
-            lesson.getQuestions().add(q);
-
-            List<Map<String, Object>> options = (List<Map<String, Object>>) question.get("options");
-            options.forEach(option -> {
-                Option o = new Option();
-                o.setContent((String) option.get("option"));
-                o.setLabel((String) option.get("label"));
-                o.setQuestion(q);
-                q.getOptions().add(o);
-
-                // Set correct option
-                if (o.getLabel().equals(question.get("correct_option"))) {
-                    q.setCorrectOption(o);
+        // Đưa yêu cầu cụ thể
+        UserMessage userMessage = new UserMessage(String.format("""
+                Generate 3-5 question for the lesson: "%s".
+                Each question should include 4 option and 1 is correct option.:
+                Structure the questions in the following JSON format:
+                {
+                  "questions": [
+                    {{
+                      "question": "<question text>",
+                      "options": [
+                        {"label": "A","option": "<option 1>"},
+                        {"label": "B","option": "<option 2>"},
+                        {"label": "C","option": "<option 3>"},
+                        {"label": "D","option": "<option 4>"}
+                      ],
+                      "correct_option": "A/B/C/D",
+                      "explanation": "<explanation for the correct answer, why it is correct and why others are wrong
+                    }}
+                  ]
                 }
-            });
+                """, lesson.getTitle())
+        );
 
-            // Save each question
-            questionRepo.save(q);
-        });
+        // tạo prompt từ các message
+        // "đóng gói” lời dặn + câu hỏi → thành 1 gói hoàn chỉnh
+        Prompt prompt = new Prompt(systemMessage, userMessage);
 
-        // Return saved questions of a lesson
-        Optional<Lesson> savedLesson = lessonRepo.findById(lessonId);
-        return coachMapper.toQuestionResponseList(savedLesson.get().getQuestions());
+        // gửi prompt đến model
+        // chat client: Là đối tượng đại diện cho client kết nối đến mô hình ngôn ngữ. Mục đích:
+        ChatResponse response = chatClient
+                .prompt(prompt)
+                .call() // Bước thực thi
+                .chatResponse(); // Lấy về đối tượng phản hồi dạng chat
+
+        // lấy content và token usage
+        String content = response.getResult().getOutput().getText();
+        long totalTokens = response.getMetadata().getUsage().getTotalTokens();
+        long completionTokens = response.getMetadata().getUsage().getCompletionTokens();
+        long promptTokens = response.getMetadata().getUsage().getPromptTokens();
+        log.info("Generated course with {} totalTokens", totalTokens);
+        log.info("Generated course with {} completionTokens", completionTokens);
+        log.info("Generated course with {} promptTokens", promptTokens);
+
+        // Loại bỏ các ký tự không cần thiết để có được chuỗi JSON hợp lệ
+        String jsonString = content.trim();
+        jsonString = jsonString.replace("```json", "");
+        jsonString = jsonString.replace("```", "").trim();
+
+        // Save to Redis cache
+        Map<String, String> questionMap = new HashMap<>();
+        questionMap.put("content", jsonString);
+        jedis.hset("question:"+lesson.getTitle(), questionMap);
+//        jedis.expire(title, 86400); // set expiration time to 24 hours
+
+        // Parse JSON and save questions to Postgres
+        List<Question> savedQuestions = saveQuestionFromJson(lesson, jsonString);
+
+        return coachMapper.toQuestionResponseList(savedQuestions);
+    }
+
+    private List<Question> saveQuestionFromJson(Lesson lesson, String jsonString) {
+        // Parse JSON and save questions to Postgres
+        List<Question> savedQuestions = new ArrayList<>();
+        JsonNode root = null;
+        try {
+            root = objectMapper.readTree(jsonString);
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage());
+        }
+
+        for (JsonNode questionNode : root.get("questions")) {
+            Question question = new Question();
+            question.setTitle(questionNode.get("question").asText());
+            question.setExplanation(questionNode.get("explanation").asText());
+            question.setLesson(lesson);
+
+            // Parse options
+            List<Option> options = new ArrayList<>();
+            for (JsonNode optionNode : questionNode.get("options")) {
+                Option option = new Option();
+                option.setLabel(optionNode.get("label").asText());
+                option.setContent(optionNode.get("option").asText());
+                option.setQuestion(question);
+
+                // Save correct option
+                if(option.getLabel().equals(questionNode.get("correct_option").asText())) {
+                    question.setCorrectOption(option);
+                }
+
+                options.add(option);
+            }
+            question.setOptions(options);
+
+            // Save question to Postgres
+            Question savedQuestion = questionRepo.save(question);
+            savedQuestions.add(savedQuestion);
+        }
+
+        return savedQuestions;
     }
 
     private Candidate getCurrentCandidate() {
