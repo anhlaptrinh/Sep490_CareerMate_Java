@@ -48,7 +48,9 @@ public class SecurityConfig {
             "api/payment/**",
             // Public blog endpoints - no authentication required
             "/blogs",
-            "/blogs/**"
+            "/blogs/**",
+            // Public file upload for recruiter logos during registration
+            "/api/upload/recruiter-logo-public"
     };
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
