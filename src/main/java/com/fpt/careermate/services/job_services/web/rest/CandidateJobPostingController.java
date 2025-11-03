@@ -100,24 +100,5 @@ public class CandidateJobPostingController {
                 .build();
     }
 
-    @GetMapping("/search")
-    @Operation(
-        summary = "Search Job Postings (Alias)",
-        description = """
-            Alternative endpoint for searching job postings.
-            Same functionality as GET /api/job-postings with keyword parameter.
-            
-            This endpoint is provided for better API discoverability.
-            """
-    )
-    public ApiResponse<PageResponse<JobPostingForCandidateResponse>> searchJobPostings(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createAt") String sortBy,
-            @RequestParam(defaultValue = "desc") String sortDir
-    ) {
-        return getAllJobPostings(keyword, page, size, sortBy, sortDir);
-    }
 }
 
