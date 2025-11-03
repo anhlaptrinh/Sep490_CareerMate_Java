@@ -58,6 +58,9 @@ public enum ErrorCode {
     REJECTION_REASON_REQUIRED(6014, "Rejection reason is required when rejecting a job posting",
             HttpStatus.BAD_REQUEST),
     INVALID_APPROVAL_STATUS(6015, "Invalid approval status. Must be APPROVED or REJECTED", HttpStatus.BAD_REQUEST),
+    JOB_FEEDBACK_ALREADY_EXISTS(6016, "You have already provided this type of feedback for this job posting", HttpStatus.BAD_REQUEST),
+    JOB_FEEDBACK_NOT_FOUND(6017, "Job feedback not found", HttpStatus.NOT_FOUND),
+    INVALID_FEEDBACK_TYPE(6018, "Invalid feedback type. Must be one of: like, dislike, save, view", HttpStatus.BAD_REQUEST),
 
     // 70xx: Coach
     LESSON_NOT_FOUND(7000, "Lesson not found", HttpStatus.NOT_FOUND),
@@ -74,6 +77,7 @@ public enum ErrorCode {
     INVALID_FILE(1018, "Invalid file name or path", HttpStatus.BAD_REQUEST),
     FILE_STORAGE_ERROR(1019, "Could not store file", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_ROLE(1020, "Invalid role. Only CANDIDATE or RECRUITER allowed during registration", HttpStatus.BAD_REQUEST),
+    ROLE_CONFLICT(1021, "This email is already registered with a different role. Please use a different email or login with the correct role.", HttpStatus.CONFLICT),
 
     PROFILE_NOT_FOUND(1010, "Profile not exist", HttpStatus.BAD_REQUEST),
     CANDIDATE_NOT_FOUND(1011, "Candidate Not found", HttpStatus.BAD_REQUEST),
