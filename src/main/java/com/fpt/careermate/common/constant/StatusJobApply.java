@@ -4,5 +4,6 @@ public enum StatusJobApply {
     SUBMITTED,
     REVIEWING,
     APPROVED,
-    REJECTED
+    REJECTED,
+    BANNED
 }
