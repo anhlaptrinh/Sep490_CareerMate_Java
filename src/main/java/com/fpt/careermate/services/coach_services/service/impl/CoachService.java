@@ -9,4 +9,6 @@ import java.util.List;
 public interface CoachService {
     List<RecommendedCourseResponse> recommendCourse(String role);
     void addCourse(CourseCreationRequest request);
+    CoursePageResponse getMyCoursesWithMarkedStatus(int page, int size);
+    CoursePageResponse getMyCoursesWithUnMarkedStatus(int page, int size);
 }

@@ -54,4 +54,55 @@ public class CoachController {
                 .build();
     }
 
+    @GetMapping("/course/marked")
+    @Operation(description = """
+                Get my courses with marked status
+                input: none
+                output: list of my courses including course id title, url, marked data
+                Need to login as CANDIDATE to access this API
+                
+                int number: The current page number (starts from 0)
+                int size: The number of elements per page (page size)
+                long totalElements: The total number of elements across all pages
+                int totalPages: The total number of available pages
+                boolean first: Indicates whether this is the first page
+                boolean last: Indicates whether this is the last page
+            """)
+    public ApiResponse<CoursePageResponse> getMyCourseWithMarkedStatus(
+            @RequestParam int page,
+            @RequestParam int size
+    ) {
+        return ApiResponse.<CoursePageResponse>builder()
+                .result(courseImp.getMyCoursesWithMarkedStatus(page, size))
+                .code(200)
+                .message("success")
+                .build();
+    }
+
+    @GetMapping("/course/unmarked")
+    @Operation(description = """
+                Get my courses with unmarked status
+                
+                input: none
+                output: list of my courses including course id title, url, marked data
+                Need to login as CANDIDATE to access this API
+                
+                int number: The current page number (starts from 0)
+                int size: The number of elements per page (page size)
+                long totalElements: The total number of elements across all pages
+                int totalPages: The total number of available pages
+                boolean first: Indicates whether this is the first page
+                boolean last: Indicates whether this is the last page
+            """)
+    public ApiResponse<CoursePageResponse> getMyCourseWithUnMarkedStatus(
+            @RequestParam int page,
+            @RequestParam int size
+    ) {
+        return ApiResponse.<CoursePageResponse>builder()
+                .result(courseImp.getMyCoursesWithUnMarkedStatus(page, size))
+                .code(200)
+                .message("success")
+                .build();
+    }
+
 }

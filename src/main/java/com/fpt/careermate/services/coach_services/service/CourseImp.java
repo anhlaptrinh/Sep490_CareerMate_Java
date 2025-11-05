@@ -19,6 +19,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cglib.core.Local;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
@@ -41,7 +45,7 @@ public class CourseImp implements CoachService {
     // Hàm gợi ý khóa học dựa trên vai trò (role) của người dùng
     public List<RecommendedCourseResponse> recommendCourse(String role) {
         String collectionName = "Course";
-        String[] target_vector = { "description_vector" };
+        String[] target_vector = {"description_vector"};
 
         // Tạo bộ lọc tìm kiếm gần theo văn bản (nearText)
         // "concepts" là mảng các từ khóa hoặc cụm từ dùng để tìm kiếm ngữ nghĩa
@@ -104,7 +108,7 @@ public class CourseImp implements CoachService {
     // Hàm thêm khóa học khi candidate chọn course được gợi ý
     @Override
     @PreAuthorize("hasRole('CANDIDATE')")
-    public void addCourse(CourseCreationRequest request){
+    public void addCourse(CourseCreationRequest request) {
         Course course = courseMapper.toCourse(request);
         // Thiết lập ngày tạo khóa học và liên kết với candidate
         course.setCreatedAt(LocalDate.now());
@@ -112,5 +116,40 @@ public class CourseImp implements CoachService {
 
         // Lưu course vào Postgres
         courseRepo.save(course);
+    }
+
+    // Hàm lấy danh sách khóa học của candidate hiện tại với trạng thái đã đánh dấu
+    @Override
+    @PreAuthorize("hasRole('CANDIDATE')")
+    public CoursePageResponse getMyCoursesWithMarkedStatus(int page, int size) {
+        return getMyCourses(page, size, true);
+    }
+
+    // Hàm lấy danh sách khóa học của candidate hiện tại với trạng thái chưa đánh dấu
+    @Override
+    @PreAuthorize("hasRole('CANDIDATE')")
+    public CoursePageResponse getMyCoursesWithUnMarkedStatus(int page, int size) {
+        return getMyCourses(page, size, false);
+    }
+
+    private CoursePageResponse getMyCourses(int page, int size, boolean marked) {
+        List<CourseResponse> myCourses = new ArrayList<>();
+        Integer candidateId = coachUtil.getCurrentCandidate().getCandidateId();
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("title").ascending());
+        Page<Course> courses = courseRepo.findByMarkedAndCandidate_CandidateId(marked, candidateId, pageable);
+
+        // Chuyển từng Course sang CourseResponse và thêm vào danh sách
+        courses.getContent().forEach(course -> {
+            CourseResponse courseResponse = courseMapper.toCourseResponse(course);
+            myCourses.add(courseResponse);
+        });
+
+        // Chuyển Page<Course> sang CoursePageResponse
+        CoursePageResponse coursePageResponse = courseMapper.toCoursePageResponse(courses);
+        coursePageResponse.setContent(myCourses);
+
+
+        return coursePageResponse;
     }
 }
