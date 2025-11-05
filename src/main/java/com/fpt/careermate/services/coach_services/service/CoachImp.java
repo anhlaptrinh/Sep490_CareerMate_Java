@@ -54,6 +54,7 @@ public class CoachImp implements CoachService {
     @Override
     // Hàm gợi ý khóa học dựa trên vai trò (role) của người dùng
     public List<RecommendedCourseResponse> recommendCourse(String role) {
+        String collectionName = "Course2";
 
         // Tạo bộ lọc tìm kiếm gần theo văn bản (nearText)
         // "concepts" là mảng các từ khóa hoặc cụm từ dùng để tìm kiếm ngữ nghĩa
@@ -69,6 +70,7 @@ public class CoachImp implements CoachService {
         Fields fields = Fields.builder()
                 .fields(new Field[]{
                         Field.builder().name("title").build(),
+                        Field.builder().name("link").build(),
                         Field.builder().name("_additional").fields(new Field[]{
                                 Field.builder().name("certainty").build()
                         }).build()
@@ -77,7 +79,7 @@ public class CoachImp implements CoachService {
 
         // Tạo câu truy vấn GraphQL để lấy danh sách 5 khóa học liên quan nhất
         String query = GetBuilder.builder()
-                .className("Course")
+                .className(collectionName)
                 .fields(fields)                 // các trường cần lấy
                 .withNearTextFilter(nearText)   // áp dụng bộ lọc nearText
                 .limit(5)
@@ -88,21 +90,23 @@ public class CoachImp implements CoachService {
         // tự viết câu truy vấn GraphQL dạng chuỗi (query)
         Result<GraphQLResponse> result = client.graphQL().raw().withQuery(query).run();
         GraphQLResponse graphQLResponse = result.getResult();
+        log.info("GraphQL Response: {}", graphQLResponse);
 
         // Trích xuất dữ liệu từ phản hồi GraphQL (ở dạng Map lồng nhau)
         Map<String, Object> data = (Map<String, Object>) graphQLResponse.getData();   // {Get={Course=[{...}]}}
         Map<String, Object> get = (Map<String, Object>) data.get("Get");              // {Course=[{...}]}
-        List<Map<String, Object>> courseData = (List<Map<String, Object>>) get.get("Course");  // danh sách khóa học
+        List<Map<String, Object>> courseData = (List<Map<String, Object>>) get.get(collectionName);  // danh sách khóa học
 
         // Chuyển từng phần tử trong danh sách sang đối tượng phản hồi (DTO)
         List<RecommendedCourseResponse> recommendedCourseResponseList = new ArrayList<>();
         courseData.forEach(course -> {
             String title = (String) course.get("title");
+            String link = (String) course.get("link");
             Map<String, Object> additional = (Map<String, Object>) course.get("_additional");
             Double similarityScore = (Double) additional.get("certainty");
 
             // Thêm vào danh sách kết quả trả về
-            recommendedCourseResponseList.add(new RecommendedCourseResponse(title, similarityScore));
+            recommendedCourseResponseList.add(new RecommendedCourseResponse(title, link, similarityScore));
         });
 
         // Trả về danh sách khóa học gợi ý
