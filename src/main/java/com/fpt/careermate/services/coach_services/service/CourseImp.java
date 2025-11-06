@@ -1,5 +1,7 @@
 package com.fpt.careermate.services.coach_services.service;
 
+import com.fpt.careermate.common.exception.AppException;
+import com.fpt.careermate.common.exception.ErrorCode;
 import com.fpt.careermate.common.util.CoachUtil;
 import com.fpt.careermate.services.coach_services.domain.Course;
 import com.fpt.careermate.services.coach_services.repository.CourseRepo;
@@ -151,5 +153,18 @@ public class CourseImp implements CoachService {
 
 
         return coursePageResponse;
+    }
+
+    @Override
+    @PreAuthorize("hasRole('CANDIDATE')")
+    public void markCourse(int courseId, boolean marked) {
+        // Kiểm tra khóa học có tồn tại không
+        Optional<Course> exsting = courseRepo.findById(courseId);
+        if(exsting.isEmpty()) throw new AppException(ErrorCode.COURSE_NOT_FOUND);
+
+        // Cập nhật trạng thái đánh dấu
+        Course course = exsting.get();
+        course.setMarked(marked);
+        courseRepo.save(course);
     }
 }

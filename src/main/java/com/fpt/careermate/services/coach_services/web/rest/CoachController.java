@@ -105,4 +105,23 @@ public class CoachController {
                 .build();
     }
 
+    @PatchMapping("/course/marked/{courseId}")
+    @Operation(description = """
+                Mark or unmark a course
+                input: courseId, marked (true for marked, false for unmarked)
+                output: none
+                Need to login as CANDIDATE to access this API
+            """)
+    public ApiResponse<CoursePageResponse> markCourse(
+            @RequestParam int courseId,
+            @RequestParam boolean marked
+    ) {
+        courseImp.markCourse(courseId, marked);
+
+        return ApiResponse.<CoursePageResponse>builder()
+                .code(200)
+                .message("success")
+                .build();
+    }
+
 }

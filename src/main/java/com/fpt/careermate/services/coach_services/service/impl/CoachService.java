@@ -11,4 +11,5 @@ public interface CoachService {
     void addCourse(CourseCreationRequest request);
     CoursePageResponse getMyCoursesWithMarkedStatus(int page, int size);
     CoursePageResponse getMyCoursesWithUnMarkedStatus(int page, int size);
+    void markCourse(int courseId, boolean marked);
 }
