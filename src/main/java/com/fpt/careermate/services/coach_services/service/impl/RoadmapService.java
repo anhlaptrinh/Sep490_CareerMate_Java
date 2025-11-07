@@ -8,4 +8,5 @@ public interface RoadmapService {
     void addRoadmap(String nameRoadmap, String fileName);
     RoadmapResponse getRoadmap(int roadmapId);
     TopicDetailResponse getTopicDetail(int topicId);
+    TopicDetailResponse getSubtopicDetail(int subtopicId);
 }

@@ -6,6 +6,7 @@ import com.fpt.careermate.services.coach_services.domain.Roadmap;
 import com.fpt.careermate.services.coach_services.domain.Subtopic;
 import com.fpt.careermate.services.coach_services.domain.Topic;
 import com.fpt.careermate.services.coach_services.repository.RoadmapRepo;
+import com.fpt.careermate.services.coach_services.repository.SubtopicRepo;
 import com.fpt.careermate.services.coach_services.repository.TopicRepo;
 import com.fpt.careermate.services.coach_services.service.dto.response.*;
 import com.fpt.careermate.services.coach_services.service.impl.RoadmapService;
@@ -37,6 +38,7 @@ public class RoadmapImp implements RoadmapService {
     WeaviateClient client;
     RoadmapRepo roadmapRepo;
     TopicRepo topicRepo;
+    SubtopicRepo subtopicRepo;
     RoadmapMapper roadmapMapper;
 
     // Thêm roadmap vào Postgres
@@ -125,6 +127,27 @@ public class RoadmapImp implements RoadmapService {
         List<ResourceResponse> resourceResponses = new ArrayList<>();
 
         TopicDetailResponse topicDetailResponse = roadmapMapper.topicDetailResponse(topic);
+
+        // Map urls to ResourceResponse
+        for (String url : urls) {
+            ResourceResponse resourceResponse = new ResourceResponse(url.trim());
+            resourceResponses.add(resourceResponse);
+        }
+
+        topicDetailResponse.setResourceResponses(resourceResponses);
+        return topicDetailResponse;
+    }
+
+    @Override
+    @PreAuthorize("hasRole('CANDIDATE')")
+    public TopicDetailResponse getSubtopicDetail(int subtopicId) {
+        // Kiểm tra subtopic tồn tại
+        Subtopic subtopic = subtopicRepo.findById(subtopicId)
+                .orElseThrow(() -> new AppException(ErrorCode.SUBTOPIC_NOT_FOUND));
+        String[] urls = subtopic.getResources().split(",");
+        List<ResourceResponse> resourceResponses = new ArrayList<>();
+
+        TopicDetailResponse topicDetailResponse = roadmapMapper.toSubtopicDetailResponse(subtopic);
 
         // Map urls to ResourceResponse
         for (String url : urls) {

@@ -77,4 +77,20 @@ public class RoadmapController {
                 .message("success")
                 .build();
     }
+
+    @GetMapping("/subtopic/{subtopicId}")
+    @Operation(description = """
+            Get subtopic by id
+            input: subtopicId
+            output: name, description and resources of subtopicId
+            Need login as CANDIDATE to access this API
+            """)
+    public ApiResponse<TopicDetailResponse> getSubtopicDetailById(@PathVariable int subtopicId)
+    {
+        return ApiResponse.<TopicDetailResponse>builder()
+                .result(roadmapImp.getSubtopicDetail(subtopicId))
+                .code(200)
+                .message("success")
+                .build();
+    }
 }

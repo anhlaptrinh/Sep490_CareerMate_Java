@@ -17,4 +17,5 @@ public interface RoadmapMapper {
     SubtopicResponse toSubtopicResponse(Subtopic subtopic);
 
     TopicDetailResponse topicDetailResponse(Topic topic);
+    TopicDetailResponse toSubtopicDetailResponse(Subtopic subtopic);
 }
