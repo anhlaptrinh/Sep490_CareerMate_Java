@@ -4,7 +4,6 @@ import com.fpt.careermate.common.exception.AppException;
 import com.fpt.careermate.common.exception.ErrorCode;
 import com.fpt.careermate.common.util.CoachUtil;
 import com.fpt.careermate.config.PaymentConfig;
-import com.fpt.careermate.common.constant.StatusOrder;
 import com.fpt.careermate.common.constant.StatusPayment;
 import com.fpt.careermate.services.account_services.domain.Account;
 import com.fpt.careermate.services.account_services.repository.AccountRepo;
@@ -13,7 +12,7 @@ import com.fpt.careermate.services.order_services.domain.CandidatePackage;
 import com.fpt.careermate.services.order_services.service.OrderImp;
 import com.fpt.careermate.services.profile_services.domain.Candidate;
 import com.fpt.careermate.services.profile_services.repository.CandidateRepo;
-import com.fpt.careermate.services.order_services.repository.OrderRepo;
+import com.fpt.careermate.services.order_services.repository.CandidateOrderRepo;
 import com.fpt.careermate.services.payment_services.service.impl.PaymentService;
 import com.fpt.careermate.common.util.PaymentUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,7 +40,7 @@ public class PaymentImp implements PaymentService {
 
     PaymentConfig paymentConfig;
     PaymentUtil paymentUtil;
-    OrderRepo orderRepo;
+    CandidateOrderRepo candidateOrderRepo;
     CandidateRepo candidateRepo;
     AccountRepo accountRepo;
     OrderImp orderImp;

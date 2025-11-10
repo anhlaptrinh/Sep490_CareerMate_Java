@@ -114,21 +114,21 @@ public class DataSeederImp implements CommandLineRunner {
             free.setPrice(0L);
             free.setDurationDays(0);
             free.setPriority(3);
-            free.setCreatedAt(LocalDateTime.now());
+            free.setCreateAt(LocalDateTime.now());
 
             var plus = new CandidatePackage();
             plus.setName("Plus");
             plus.setPrice(99000L);
             plus.setDurationDays(30);
             plus.setPriority(2);
-            plus.setCreatedAt(LocalDateTime.now());
+            plus.setCreateAt(LocalDateTime.now());
 
             var premium = new CandidatePackage();
             premium.setName("Premium");
             premium.setPrice(199000L);
             premium.setDurationDays(30);
             premium.setPriority(1);
-            premium.setCreatedAt(LocalDateTime.now());
+            premium.setCreateAt(LocalDateTime.now());
 
             packageRepo.saveAll(List.of(free, plus, premium));
         }

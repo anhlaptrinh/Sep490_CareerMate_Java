@@ -11,6 +11,11 @@ import java.time.LocalDate;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CandidateOrderResponse {
+    int id;
+    String candidateName;
+    long amount;
+    String status;
+    boolean isActive;
     LocalDate startDate;
     LocalDate endDate;
     String packageName;

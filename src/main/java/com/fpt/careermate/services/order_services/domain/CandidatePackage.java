@@ -25,7 +25,7 @@ public class CandidatePackage {
 
 
 
-    LocalDateTime createdAt;
+    LocalDateTime createAt;
 
     @OneToMany(mappedBy = "candidatePackage")
     List<EntitlementPackage> entitlementPackages;

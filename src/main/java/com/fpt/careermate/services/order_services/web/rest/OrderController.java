@@ -4,6 +4,7 @@ import com.fpt.careermate.services.order_services.service.OrderImp;
 import com.fpt.careermate.common.response.ApiResponse;
 import com.fpt.careermate.services.order_services.service.dto.response.CandidateOrderResponse;
 import com.fpt.careermate.services.order_services.service.dto.response.MyCandidateOrderResponse;
+import com.fpt.careermate.services.order_services.service.dto.response.PageCandidateOrderResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Positive;
@@ -43,9 +44,12 @@ public class OrderController {
 
     @Operation(summary = "Get candidateOrder list for admin")
     @GetMapping
-    public ApiResponse<List<CandidateOrderResponse>> getOrderList() {
-        return ApiResponse.<List<CandidateOrderResponse>>builder()
-                .result(orderImp.getOrderList())
+    public ApiResponse<PageCandidateOrderResponse> getOrderList(
+            @RequestParam(name = "page", defaultValue = "1") @Positive int page,
+            @RequestParam(name = "size", defaultValue = "10") @Positive int size
+    ) {
+        return ApiResponse.<PageCandidateOrderResponse>builder()
+                .result(orderImp.getOrderList(page, size))
                 .code(200)
                 .message("success")
                 .build();
