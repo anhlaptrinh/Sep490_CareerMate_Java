@@ -170,4 +170,10 @@ public class CandidateEntitlementCheckerService {
         return appliedCountThisMonth < limit;
     }
 
+    /**
+     * Kiểm tra candidate có quyền dùng tính năng xem recruiter info không?
+     */
+    public boolean canReviewRecruiterInfo() {
+        return core(EntitlementCode.RECRUITER_INFO);
+    }
 }

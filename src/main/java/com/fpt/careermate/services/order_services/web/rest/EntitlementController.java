@@ -101,4 +101,20 @@ public class EntitlementController {
                 .message("success")
                 .build();
     }
+
+    @GetMapping("/recruiter-info-checker")
+    @Operation(description = """
+            Check if candidate can use Recruiter Info feature
+            input: none
+            output: boolean
+            Need login as candidate to access this API
+            Use this API before calling Recruiter Info API
+            """)
+    public ApiResponse<Boolean> canReviewRecruiterInfo() {
+        return ApiResponse.<Boolean>builder()
+                .result(checkerService.canReviewRecruiterInfo())
+                .code(200)
+                .message("success")
+                .build();
+    }
 }

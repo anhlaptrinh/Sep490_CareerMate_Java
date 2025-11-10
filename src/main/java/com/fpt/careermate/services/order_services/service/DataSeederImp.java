@@ -78,22 +78,25 @@ public class DataSeederImp implements CommandLineRunner {
             var recruiterInfo = new Entitlement();
             recruiterInfo.setName("Recruiter Info Visibility");
             recruiterInfo.setCode(EntitlementCode.RECRUITER_INFO);
-            recruiterInfo.setUnit("%");
+            recruiterInfo.setUnit("boolean");
             recruiterInfo.setHasLimit(true);
 
             var aiRoadmap = new Entitlement();
             aiRoadmap.setName("AI Roadmap");
             aiRoadmap.setCode(EntitlementCode.AI_ROADMAP);
+            recruiterInfo.setUnit("boolean");
             aiRoadmap.setHasLimit(false);
 
             var cvDownload = new Entitlement();
             cvDownload.setName("CV Download (PDF)");
             cvDownload.setCode(EntitlementCode.CV_DOWNLOAD);
+            recruiterInfo.setUnit("boolean");
             cvDownload.setHasLimit(false);
 
             var jobRecommendation = new Entitlement();
             jobRecommendation.setName("Job Recommendation");
             jobRecommendation.setCode(EntitlementCode.JOB_RECOMMENDATION);
+            recruiterInfo.setUnit("boolean");
             jobRecommendation.setHasLimit(false);
 
             entitlementRepo.saveAll(List.of(cvBuilder, applyJob, aiAnalyzer, recruiterInfo, aiRoadmap, cvDownload, jobRecommendation));
@@ -166,7 +169,7 @@ public class DataSeederImp implements CommandLineRunner {
                     new EntitlementPackage(true, 1, now, cvBuilder, free),
                     new EntitlementPackage(true, 5, now, applyJob, free),
                     new EntitlementPackage(false, 0, now, aiAnalyzer, free),
-                    new EntitlementPackage(true, 0, now, recruiterInfo, free),
+                    new EntitlementPackage(false, 0, now, recruiterInfo, free),
                     new EntitlementPackage(false, 0, now, aiRoadmap, free),
                     new EntitlementPackage(false, 0, now, cvDownload, free),
                     new EntitlementPackage(false, 0, now, jobRecommendation, free)
@@ -177,7 +180,7 @@ public class DataSeederImp implements CommandLineRunner {
                     new EntitlementPackage(true, 3, now, cvBuilder, plus),
                     new EntitlementPackage(true, 20, now, applyJob, plus),
                     new EntitlementPackage(true, 0, now, aiAnalyzer, plus),
-                    new EntitlementPackage(true, 50, now, recruiterInfo, plus),
+                    new EntitlementPackage(true, 0, now, recruiterInfo, plus),
                     new EntitlementPackage(false, 0, now, aiRoadmap, plus),
                     new EntitlementPackage(true, 0, now, cvDownload, plus),
                     new EntitlementPackage(true, 0, now, jobRecommendation, plus)
@@ -188,7 +191,7 @@ public class DataSeederImp implements CommandLineRunner {
                     new EntitlementPackage(true, 0, now, cvBuilder, premium),
                     new EntitlementPackage(true, 0, now, applyJob, premium),
                     new EntitlementPackage(true, 0, now, aiAnalyzer, premium),
-                    new EntitlementPackage(true, 100, now, recruiterInfo, premium),
+                    new EntitlementPackage(true, 0, now, recruiterInfo, premium),
                     new EntitlementPackage(true, 0, now, aiRoadmap, premium),
                     new EntitlementPackage(true, 0, now, cvDownload, premium),
                     new EntitlementPackage(true, 0, now, jobRecommendation, premium)
