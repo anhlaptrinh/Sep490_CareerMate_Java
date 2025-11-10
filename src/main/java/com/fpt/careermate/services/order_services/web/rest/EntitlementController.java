@@ -85,4 +85,20 @@ public class EntitlementController {
                 .message("success")
                 .build();
     }
+
+    @GetMapping("/apply-job-checker")
+    @Operation(description = """
+            Check if candidate can use Apply Job feature
+            input: none
+            output: boolean
+            Need login as candidate to access this API
+            Use this API before calling Apply Job API
+            """)
+    public ApiResponse<Boolean> canApplyJob() {
+        return ApiResponse.<Boolean>builder()
+                .result(checkerService.canApplyJob())
+                .code(200)
+                .message("success")
+                .build();
+    }
 }

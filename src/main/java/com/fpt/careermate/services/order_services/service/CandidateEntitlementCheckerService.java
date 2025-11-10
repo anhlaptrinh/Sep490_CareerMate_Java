@@ -4,6 +4,7 @@ package com.fpt.careermate.services.order_services.service;
 import com.fpt.careermate.common.constant.EntitlementCode;
 import com.fpt.careermate.common.constant.PackageCode;
 import com.fpt.careermate.common.util.CoachUtil;
+import com.fpt.careermate.services.job_services.repository.JobApplyRepo;
 import com.fpt.careermate.services.order_services.domain.CandidatePackage;
 import com.fpt.careermate.services.order_services.domain.EntitlementPackage;
 import com.fpt.careermate.services.order_services.domain.Invoice;
@@ -16,6 +17,10 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.Month;
+import java.time.YearMonth;
 
 /**
  * Service kiểm tra quyền hạn của Candidate khi mua gói dịch vụ
@@ -30,6 +35,7 @@ public class CandidateEntitlementCheckerService {
     EntitlementPackageRepo entitlementPackageRepo;
     CoachUtil coachUtil;
     PackageRepo packageRepo;
+    JobApplyRepo jobApplyRepo;
 
 
     public boolean core(String entitlementCode) {
@@ -59,10 +65,10 @@ public class CandidateEntitlementCheckerService {
         Invoice invoice = currentCandidate.getInvoice();
 
         if(invoice == null || !invoice.isActive()) {
-            return true;
+            return true; // candidate chưa có package active → coi như Free
         }
 
-        return false;
+        return false;  // candidate đã có package active
     }
 
     /**
@@ -117,10 +123,51 @@ public class CandidateEntitlementCheckerService {
 
         // Nếu limit = 0 → nghĩa là không giới hạn
         Integer limit = entitlement.getLimitValue();
-        log.info("Limit value: {}", limit);
         if (limit == null || limit == 0) return true;
 
         // Chỉ cho phép tạo mới nếu chưa vượt giới hạn
         return currentCvCount < limit;
     }
+
+    /**
+     * Kiểm tra candidate có thể Apply Job thêm không
+     * Logic:
+     *  - Free: được apply tối đa 5 job / tháng
+     *  - Plus: tối đa 20 job / tháng
+     *  - Premium: không giới hạn (limit = 0)
+     */
+    public boolean canApplyJob() {
+        Candidate candidate = coachUtil.getCurrentCandidate();
+
+        // Lấy tháng hiện tại
+        int currentMonth = LocalDate.now().getMonth().getValue();
+        // Lấy năm hiện tại
+        int currentYear = LocalDate.now().getYear();
+
+        // Đếm số lần apply trong tháng này
+        int appliedCountThisMonth = jobApplyRepo.countByCandidateAndMonth(candidate.getCandidateId(), currentMonth, currentYear);
+
+        // Lấy gói hiện tại
+        CandidatePackage candidatePackage = checkFreePackage()
+                ? packageRepo.findByName(PackageCode.FREE)
+                : candidate.getInvoice().getCandidatePackage();
+
+        // Lấy entitlement APPLY_JOB tương ứng với gói đó
+        EntitlementPackage entitlement = entitlementPackageRepo
+                .findByCandidatePackage_NameAndEntitlement_Code(
+                        candidatePackage.getName(),
+                        EntitlementCode.APPLY_JOB
+                );
+
+        // Nếu entitlement không tồn tại hoặc bị disable → không được apply
+        if (entitlement == null || !entitlement.isEnabled()) return false;
+
+        // Nếu entitlement có limitCount = 0 → không giới hạn apply
+        Integer limit = entitlement.getLimitValue();
+        if (limit == null || limit == 0) return true;
+
+        // Chỉ cho phép apply nếu chưa vượt giới hạn trong tháng
+        return appliedCountThisMonth < limit;
+    }
+
 }
