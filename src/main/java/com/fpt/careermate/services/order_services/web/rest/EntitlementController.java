@@ -69,4 +69,20 @@ public class EntitlementController {
                 .message("success")
                 .build();
     }
+
+    @GetMapping("/cv-builder-checker")
+    @Operation(description = """
+            Check if candidate can use CV Builder feature
+            input: none
+            output: boolean
+            Need login as candidate to access this API
+            Use this API before calling CV Builder API
+            """)
+    public ApiResponse<Boolean> canCreateNewCV() {
+        return ApiResponse.<Boolean>builder()
+                .result(checkerService.canCreateNewCV())
+                .code(200)
+                .message("success")
+                .build();
+    }
 }

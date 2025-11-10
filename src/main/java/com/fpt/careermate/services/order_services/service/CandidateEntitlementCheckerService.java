@@ -85,4 +85,41 @@ public class CandidateEntitlementCheckerService {
     public boolean canUseAIAnalyzer() {
         return core(EntitlementCode.AI_ANALYZER);
     }
+
+    /**
+     * 🧱 Kiểm tra candidate có thể tạo thêm CV mới hay không.
+     * Logic:
+     *  - Free: tạo tối đa 1 CV
+     *  - Plus: tối đa 3 CV
+     *  - Premium: không giới hạn (limit = 0)
+     */
+    public boolean canCreateNewCV() {
+        Candidate candidate = coachUtil.getCurrentCandidate();
+
+        // Đếm số lượng CV hiện có của candidate
+        int currentCvCount = candidate.getResumes().size();
+
+        // Lấy gói hiện tại (Free nếu không có invoice hoạt động)
+        CandidatePackage candidatePackage = checkFreePackage()
+                ? packageRepo.findByName("Free")
+                : candidate.getInvoice().getCandidatePackage();
+
+        // Lấy entitlement CV_BUILDER tương ứng với gói đó
+        EntitlementPackage entitlement = entitlementPackageRepo
+                .findByCandidatePackage_NameAndEntitlement_Code(
+                        candidatePackage.getName(),
+                        EntitlementCode.CV_BUILDER
+                );
+
+        // Nếu entitlement không tồn tại hoặc bị disable → không được tạo
+        if (entitlement == null || !entitlement.isEnabled()) return false;
+
+        // Nếu limit = 0 → nghĩa là không giới hạn
+        Integer limit = entitlement.getLimitValue();
+        log.info("Limit value: {}", limit);
+        if (limit == null || limit == 0) return true;
+
+        // Chỉ cho phép tạo mới nếu chưa vượt giới hạn
+        return currentCvCount < limit;
+    }
 }
