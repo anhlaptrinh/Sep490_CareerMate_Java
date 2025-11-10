@@ -2,6 +2,7 @@ package com.fpt.careermate.services.order_services.service;
 
 
 import com.fpt.careermate.common.constant.EntitlementCode;
+import com.fpt.careermate.common.constant.PackageCode;
 import com.fpt.careermate.common.util.CoachUtil;
 import com.fpt.careermate.services.order_services.domain.CandidatePackage;
 import com.fpt.careermate.services.order_services.domain.EntitlementPackage;
@@ -36,7 +37,7 @@ public class CandidateEntitlementCheckerService {
         if (checkFreePackage()) {
             // Nếu là Free package
             log.info("Candidate is on Free CandidatePackage");
-            CandidatePackage freeCandidatePackage = packageRepo.findByName("Free");
+            CandidatePackage freeCandidatePackage = packageRepo.findByName(PackageCode.FREE);
             EntitlementPackage entitlement = entitlementPackageRepo
                     .findByCandidatePackage_NameAndEntitlement_Code(freeCandidatePackage.getName(), entitlementCode);
             return entitlement != null && entitlement.isEnabled();
@@ -101,7 +102,7 @@ public class CandidateEntitlementCheckerService {
 
         // Lấy gói hiện tại (Free nếu không có invoice hoạt động)
         CandidatePackage candidatePackage = checkFreePackage()
-                ? packageRepo.findByName("Free")
+                ? packageRepo.findByName(PackageCode.FREE)
                 : candidate.getInvoice().getCandidatePackage();
 
         // Lấy entitlement CV_BUILDER tương ứng với gói đó
