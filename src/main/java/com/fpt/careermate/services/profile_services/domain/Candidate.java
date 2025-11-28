@@ -1,10 +1,12 @@
 package com.fpt.careermate.services.profile_services.domain;
 
 import com.fpt.careermate.services.coach_services.domain.Course;
+import com.fpt.careermate.services.interview_services.domain.InterviewSession;
 import com.fpt.careermate.services.job_services.domain.JobFeedback;
 import com.fpt.careermate.services.account_services.domain.Account;
 import com.fpt.careermate.services.job_services.domain.JobApply;
-import com.fpt.careermate.services.order_services.domain.Invoice;
+import com.fpt.careermate.services.job_services.domain.SavedJob;
+import com.fpt.careermate.services.order_services.domain.CandidateInvoice;
 import com.fpt.careermate.services.resume_services.domain.Resume;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,13 +30,18 @@ public class Candidate extends BaseUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int candidateId;
 
-    String title;
-    String jobLevel;
+    @Builder.Default
+    String title = "";
+
+    @Builder.Default
+    String jobLevel = "";
 
     @Column(name = "experience")
-    Integer experience;
+    @Builder.Default
+    Integer experience = 0;
 
-    String link;
+    @Builder.Default
+    String link = "";
 
     // One-to-one với Account
     @OneToOne
@@ -56,7 +63,7 @@ public class Candidate extends BaseUser {
 
 
     @OneToOne(mappedBy = "candidate")
-    Invoice invoice;
+    CandidateInvoice candidateInvoice;
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<JobApply> jobApplies = new HashSet<>();
@@ -66,4 +73,11 @@ public class Candidate extends BaseUser {
 
     @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
     Set<JobFeedback> jobFeedbacks = new HashSet<>();
+
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<SavedJob> savedJobs = new HashSet<>();
+
+    // One-to-many with InterviewSession
+    @OneToMany(mappedBy = "candidate", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<InterviewSession> interviewSessions = new ArrayList<>();
 }

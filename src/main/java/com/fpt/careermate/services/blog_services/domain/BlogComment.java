@@ -36,15 +36,33 @@ public class BlogComment {
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
-    @Column(name = "is_deleted")
-    Boolean isDeleted;
+    @Column(name = "is_hidden")
+    Boolean isHidden;
+
+    @Column(name = "is_flagged")
+    Boolean isFlagged;
+
+    @Column(name = "flag_reason")
+    String flagReason;
+
+    @Column(name = "flagged_at")
+    LocalDateTime flaggedAt;
+
+    @Column(name = "reviewed_by_admin")
+    Boolean reviewedByAdmin;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (isDeleted == null) {
-            isDeleted = false;
+        if (isHidden == null) {
+            isHidden = false;
+        }
+        if (isFlagged == null) {
+            isFlagged = false;
+        }
+        if (reviewedByAdmin == null) {
+            reviewedByAdmin = false;
         }
     }
 
@@ -53,4 +71,3 @@ public class BlogComment {
         updatedAt = LocalDateTime.now();
     }
 }
-

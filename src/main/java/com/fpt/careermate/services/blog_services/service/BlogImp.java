@@ -9,6 +9,8 @@ import com.fpt.careermate.services.blog_services.service.dto.request.BlogCreatio
 import com.fpt.careermate.services.blog_services.service.dto.request.BlogUpdateRequest;
 import com.fpt.careermate.services.blog_services.service.dto.response.BlogResponse;
 import com.fpt.careermate.services.blog_services.service.mapper.BlogMapper;
+import com.fpt.careermate.services.file_services.service.FileStorageImp;
+import com.fpt.careermate.services.storage.FirebaseStorageService;
 import com.fpt.careermate.common.exception.AppException;
 import com.fpt.careermate.common.exception.ErrorCode;
 import lombok.AccessLevel;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,75 +34,145 @@ public class BlogImp implements BlogService {
     BlogRepo blogRepo;
     AdminRepo adminRepo;
     BlogMapper blogMapper;
+    BlogImageCleanupImp blogImageCleanup;
+    FileStorageImp fileStorageImp;
+    FirebaseStorageService firebaseStorageService;
 
     @Override
     @Transactional
     public BlogResponse createBlog(BlogCreationRequest request, String email) {
         log.info("Creating blog for admin email: {}", email);
-        log.info("Blog details - Title: {}, ThumbnailUrl: {}", request.getTitle(), request.getThumbnailUrl());
-
-        // Validate required fields
-        if (request.getTitle() == null || request.getTitle().trim().isEmpty()) {
-            log.error("Blog creation failed: Title is required");
-            throw new AppException(ErrorCode.BLOG_INVALID_STATUS);
-        }
-
-        if (request.getContent() == null || request.getContent().trim().isEmpty()) {
-            log.error("Blog creation failed: Content is required");
-            throw new AppException(ErrorCode.BLOG_INVALID_STATUS);
-        }
 
         Admin admin = adminRepo.findByAccount_Email(email)
-                .orElseThrow(() -> {
-                    log.error("Admin not found with email: {}", email);
-                    return new AppException(ErrorCode.USER_NOT_EXISTED);
-                });
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
 
         Blog blog = blogMapper.toBlog(request);
         blog.setAdmin(admin);
+        
+        // Generate unique slug from title
+        String baseSlug = Blog.generateSlug(request.getTitle());
+        String slug = baseSlug;
+        int counter = 1;
+        while (blogRepo.existsBySlug(slug)) {
+            slug = baseSlug + "-" + counter++;
+        }
+        blog.setSlug(slug);
 
         if (request.getStatus() != null) {
             try {
                 blog.setStatus(Blog.BlogStatus.valueOf(request.getStatus().toUpperCase()));
             } catch (IllegalArgumentException e) {
-                log.error("Invalid blog status: {}", request.getStatus());
                 throw new AppException(ErrorCode.BLOG_INVALID_STATUS);
             }
         }
 
-        try {
-            blog = blogRepo.save(blog);
-            log.info("✅ Blog created successfully with ID: {}", blog.getId());
-            return blogMapper.toBlogResponse(blog);
-        } catch (Exception e) {
-            log.error("❌ Failed to save blog to database: {}", e.getMessage(), e);
-            throw new AppException(ErrorCode.BLOG_INVALID_STATUS);
-        }
+        blog = blogRepo.save(blog);
+        return blogMapper.toBlogResponse(blog);
     }
 
     @Override
     @Transactional
     public BlogResponse updateBlog(Long blogId, BlogUpdateRequest request) {
-        log.info("Updating blog ID: {}", blogId);
+        log.info("=== UPDATE BLOG START === ID: {}", blogId);
 
         Blog blog = blogRepo.findById(blogId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLOG_NOT_FOUND));
 
+        // Store old values for cleanup
+        String oldContent = blog.getContent();
+        String oldThumbnailUrl = blog.getThumbnailUrl();
+        
+        log.info("Old content length: {}", oldContent != null ? oldContent.length() : 0);
+        log.info("Old thumbnail URL: {}", oldThumbnailUrl);
+        log.info("New content length: {}", request.getContent() != null ? request.getContent().length() : 0);
+        log.info("New thumbnail URL: {}", request.getThumbnailUrl());
+
+        // Update blog
         blogMapper.updateBlog(blog, request);
         blog = blogRepo.save(blog);
+        
+        log.info("Blog updated in database");
+        
+        // Clean up images from old content that are no longer used
+        if (oldContent != null && request.getContent() != null) {
+            log.info("=== CALLING cleanupUnusedImages ===");
+            blogImageCleanup.cleanupUnusedImages(oldContent, request.getContent());
+        } else {
+            log.info("Skipping content cleanup - oldContent null: {}, newContent null: {}", 
+                     oldContent == null, request.getContent() == null);
+        }
+        
+        // Clean up old thumbnail if it was replaced or removed
+        if (oldThumbnailUrl != null && !oldThumbnailUrl.equals(request.getThumbnailUrl())) {
+            log.info("=== THUMBNAIL CHANGED - Deleting old thumbnail ===");
+            log.info("Old thumbnail URL: {}", oldThumbnailUrl);
+            try {
+                String oldThumbnailPath = blogImageCleanup.extractFilePathFromUrl(oldThumbnailUrl);
+                if (oldThumbnailPath != null) {
+                    log.info("Attempting to delete old thumbnail from Firebase: {}", oldThumbnailPath);
+                    boolean deleted = firebaseStorageService.deleteFile(oldThumbnailPath);
+                    log.info("Old thumbnail deletion result: {}", deleted ? "SUCCESS" : "FAILED");
+                } else {
+                    log.warn("Could not extract file path from old thumbnail URL");
+                }
+            } catch (Exception e) {
+                log.error("Failed to delete old thumbnail: {}", e.getMessage(), e);
+            }
+        } else {
+            log.info("Skipping thumbnail cleanup - oldThumbnail null: {}, unchanged: {}", 
+                     oldThumbnailUrl == null, 
+                     oldThumbnailUrl != null && oldThumbnailUrl.equals(request.getThumbnailUrl()));
+        }
 
+        log.info("=== UPDATE BLOG END === ID: {}", blogId);
         return blogMapper.toBlogResponse(blog);
     }
 
     @Override
     @Transactional
     public void deleteBlog(Long blogId) {
-        log.info("Deleting blog ID: {}", blogId);
+        log.info("=== DELETE BLOG START === ID: {}", blogId);
 
         Blog blog = blogRepo.findById(blogId)
                 .orElseThrow(() -> new AppException(ErrorCode.BLOG_NOT_FOUND));
 
+        String content = blog.getContent();
+        String thumbnailUrl = blog.getThumbnailUrl();
+        
+        log.info("Blog content length: {}", content != null ? content.length() : 0);
+        log.info("Blog thumbnail URL: {}", thumbnailUrl);
+
+        // Delete all images from content before deleting the blog
+        if (content != null) {
+            log.info("=== CALLING deleteAllImagesFromContent for content ===");
+            blogImageCleanup.deleteAllImagesFromContent(content);
+        } else {
+            log.info("Skipping content cleanup - content is null");
+        }
+        
+        // Delete thumbnail image if exists
+        if (thumbnailUrl != null) {
+            log.info("=== DELETING THUMBNAIL ===");
+            log.info("Thumbnail URL: {}", thumbnailUrl);
+            try {
+                String thumbnailPath = blogImageCleanup.extractFilePathFromUrl(thumbnailUrl);
+                if (thumbnailPath != null) {
+                    log.info("Attempting to delete thumbnail from Firebase: {}", thumbnailPath);
+                    boolean deleted = firebaseStorageService.deleteFile(thumbnailPath);
+                    log.info("Thumbnail deletion result for blog ID {}: {}", blogId, deleted ? "SUCCESS" : "FAILED");
+                } else {
+                    log.warn("Could not extract file path from thumbnail URL");
+                }
+            } catch (Exception e) {
+                log.error("Failed to delete thumbnail for blog ID {}: {}", blogId, e.getMessage(), e);
+            }
+        } else {
+            log.info("Skipping thumbnail cleanup - thumbnail URL is null");
+        }
+
+        log.info("Deleting blog record from database");
         blogRepo.delete(blog);
+        log.info("=== DELETE BLOG END === Successfully deleted blog ID: {} and associated images", blogId);
     }
 
     @Override
@@ -158,16 +231,40 @@ public class BlogImp implements BlogService {
     public Page<BlogResponse> searchBlogs(String keyword, String status, Pageable pageable) {
         log.info("Searching blogs with keyword: {}, status: {}", keyword, status);
 
-        Blog.BlogStatus blogStatus = null;
+        // Validate status if provided
         if (status != null && !status.isEmpty()) {
             try {
-                blogStatus = Blog.BlogStatus.valueOf(status.toUpperCase());
+                Blog.BlogStatus.valueOf(status.toUpperCase());
             } catch (IllegalArgumentException e) {
                 throw new AppException(ErrorCode.BLOG_INVALID_STATUS);
             }
         }
 
-        return blogRepo.searchBlogs(keyword, blogStatus, pageable)
+        return blogRepo.searchBlogs(keyword, status, pageable)
+                .map(blogMapper::toBlogResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BlogResponse> filterBlogs(String keyword, String status, String category, Pageable pageable) {
+        log.info("Filtering blogs - keyword: {}, status: {}, category: {}", keyword, status, category);
+
+        // Validate status if provided
+        if (status != null && !status.isEmpty()) {
+            try {
+                Blog.BlogStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new AppException(ErrorCode.BLOG_INVALID_STATUS);
+            }
+        }
+
+        // Normalize category (trim and handle empty string as null)
+        String normalizedCategory = category;
+        if (category != null && category.trim().isEmpty()) {
+            normalizedCategory = null;
+        }
+
+        return blogRepo.filterBlogs(keyword, status, normalizedCategory, pageable)
                 .map(blogMapper::toBlogResponse);
     }
 
@@ -250,5 +347,49 @@ public class BlogImp implements BlogService {
 
         blog.setViewCount(blog.getViewCount() + 1);
         blogRepo.save(blog);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public BlogResponse getBlogBySlug(String slug) {
+        log.info("Fetching blog by slug: {}", slug);
+
+        Blog blog = blogRepo.findBySlug(slug)
+                .orElseThrow(() -> new AppException(ErrorCode.BLOG_NOT_FOUND));
+
+        return blogMapper.toBlogResponse(blog);
+    }
+    
+    @Override
+    @Transactional
+    public void incrementViewCountBySlug(String slug) {
+        log.info("Incrementing view count for blog slug: {}", slug);
+
+        Blog blog = blogRepo.findBySlug(slug)
+                .orElseThrow(() -> new AppException(ErrorCode.BLOG_NOT_FOUND));
+
+        blog.setViewCount(blog.getViewCount() + 1);
+        blogRepo.save(blog);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public List<BlogResponse> getRelatedBlogs(Long blogId, int limit) {
+        log.info("Fetching related blogs for ID: {} with limit: {}", blogId, limit);
+
+        Blog blog = blogRepo.findById(blogId)
+                .orElseThrow(() -> new AppException(ErrorCode.BLOG_NOT_FOUND));
+
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Blog> relatedBlogs = blogRepo.findRelatedBlogs(
+                blogId,
+                blog.getCategory(),
+                blog.getTags(),
+                pageable
+        );
+
+        return relatedBlogs.stream()
+                .map(blogMapper::toBlogResponse)
+                .toList();
     }
 }

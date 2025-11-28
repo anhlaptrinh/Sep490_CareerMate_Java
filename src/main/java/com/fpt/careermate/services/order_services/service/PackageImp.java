@@ -1,6 +1,8 @@
 package com.fpt.careermate.services.order_services.service;
 
-import com.fpt.careermate.services.order_services.repository.PackageRepo;
+import com.fpt.careermate.common.constant.PackageCode;
+import com.fpt.careermate.services.order_services.repository.CandidatePackageRepo;
+import com.fpt.careermate.services.order_services.repository.RecruiterPackageRepo;
 import com.fpt.careermate.services.order_services.service.dto.request.PackageCreationRequest;
 import com.fpt.careermate.services.order_services.service.dto.response.PackageResponse;
 import com.fpt.careermate.services.order_services.service.impl.PackageService;
@@ -20,19 +22,25 @@ import java.util.List;
 @Slf4j
 public class PackageImp implements PackageService {
 
-    PackageRepo packageRepo;
+    CandidatePackageRepo candidatePackageRepo;
     PackageMapper packageMapper;
+    RecruiterPackageRepo recruiterPackageRepo;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // Get package list for candidate gồm quyền lợi
+    @PreAuthorize("hasRole('CANDIDATE')")
     @Override
-    public PackageResponse createPackage(PackageCreationRequest request) {
-        return packageMapper.toPackageResponse(packageRepo.save(packageMapper.toPackage(request)));
+    public List<PackageResponse> getCandidatePackageList() {
+        return packageMapper.toCandidatePackageResponseList(
+                candidatePackageRepo.findAllWithEntitlements()
+        );
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('RECRUITER')")
     @Override
-    public List<PackageResponse> getPackageList() {
-        return packageMapper.toPackageResponseList(packageRepo.findAll());
+    public List<PackageResponse> getRecruiterPackageList() {
+        return packageMapper.toRecruiterPackageResponseList(
+                recruiterPackageRepo.findAllWithEntitlements()
+        );
     }
 
 }

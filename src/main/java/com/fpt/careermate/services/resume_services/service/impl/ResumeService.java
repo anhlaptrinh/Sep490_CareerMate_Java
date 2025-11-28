@@ -1,6 +1,9 @@
 package com.fpt.careermate.services.resume_services.service.impl;
 
+import com.fpt.careermate.common.constant.ResumeType;
 import com.fpt.careermate.services.resume_services.service.dto.request.ResumeRequest;
+import com.fpt.careermate.services.resume_services.service.dto.request.ResumeStatusRequest;
+import com.fpt.careermate.services.resume_services.service.dto.request.ResumeTypeRequest;
 import com.fpt.careermate.services.resume_services.service.dto.response.ResumeResponse;
 
 import java.util.List;
@@ -11,4 +14,7 @@ public interface ResumeService {
     ResumeResponse getResumeById(int resumeId);
     void deleteResume(int resumeId);
     ResumeResponse updateResume(int resumeId, ResumeRequest resumeRequest);
+    ResumeResponse patchResumeStatus(int resumeId, ResumeStatusRequest request);
+    ResumeResponse patchResumeType(int resumeId, ResumeType request);
+    List<ResumeResponse> getResumesByType(ResumeType type);
 }

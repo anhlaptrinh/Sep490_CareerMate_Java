@@ -12,11 +12,10 @@ import lombok.experimental.FieldDefaults;
 public class AuthenticationResponse {
     String accessToken;
 
-    @JsonIgnore // This won't be sent to frontend, only used internally
+    @JsonIgnore // This won't be sent to frontend for web, only used internally
     String refreshToken;
 
     boolean authenticated;
     Long expiresIn;
     String tokenType;
-    String accountStatus; // ACTIVE, PENDING, REJECTED, or BANNED
 }

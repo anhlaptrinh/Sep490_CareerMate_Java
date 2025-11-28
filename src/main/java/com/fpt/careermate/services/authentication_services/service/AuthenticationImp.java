@@ -1,5 +1,6 @@
 package com.fpt.careermate.services.authentication_services.service;
 
+import com.fpt.careermate.common.constant.PredefineRole;
 import com.fpt.careermate.common.constant.StatusAccount;
 import com.fpt.careermate.services.account_services.domain.Account;
 import com.fpt.careermate.services.authentication_services.domain.InvalidToken;
@@ -102,15 +103,10 @@ public class AuthenticationImp implements AuthenticationService {
         if (!authenticated) throw new AppException(ErrorCode.UNAUTHENTICATED);
 
         String status = user.getStatus();
-
-        // Check if account is BANNED - banned accounts cannot sign in at all
-        if ("BANNED".equalsIgnoreCase(status)) {
-            throw new AppException(ErrorCode.ACCOUNT_BANNED);
+        if (!StatusAccount.ACTIVE.equalsIgnoreCase(status)) {
+            throw new AppException(ErrorCode.USER_INACTIVE);
         }
 
-        // For PENDING/REJECTED status: Allow recruiters to sign in to view their status/rejection reason
-        // For ACTIVE status: Normal authentication flow
-        // Generate tokens regardless of PENDING/REJECTED/ACTIVE status (except BANNED)
         String accessToken = generateToken(user, false);
         String refreshToken = generateToken(user, true);
 
@@ -120,7 +116,6 @@ public class AuthenticationImp implements AuthenticationService {
                 .authenticated(true)
                 .expiresIn(VALID_DURATION)
                 .tokenType("Bearer")
-                .accountStatus(status) // Include account status in response so frontend knows
                 .build();
     }
 
@@ -223,6 +218,7 @@ public class AuthenticationImp implements AuthenticationService {
                         Instant.now().plus(validDuration, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("fullname", account.getUsername())
+                .claim("userId", account.getId())
                 .claim("scope", buildScope(account))
                 .build();
 
@@ -259,6 +255,41 @@ public class AuthenticationImp implements AuthenticationService {
         var context = SecurityContextHolder.getContext();
         String email = context.getAuthentication().getName();
         return accountRepo.findByEmail(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+    }
+
+    @Override
+    public AuthenticationResponse authenticateCandidate(AuthenticationRequest request) {
+
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
+        var user = accountRepo
+                .findByEmail(request.getEmail())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+        String status = user.getStatus();
+        if ("BANNED".equalsIgnoreCase(status)) {
+            throw new AppException(ErrorCode.ACCOUNT_BANNED);
+        }
+        boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
+        // Check if user has CANDIDATE role
+        boolean isCandidate = user.getRoles().stream()
+                .anyMatch(role -> PredefineRole.USER_ROLE.equals(role.getName()));
+
+        if (!isCandidate || !authenticated) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        // For PENDING/REJECTED status: Allow recruiters to sign in to view their status/rejection reason
+        // For ACTIVE status: Normal authentication flow
+        // Generate tokens regardless of PENDING/REJECTED/ACTIVE status (except BANNED)
+        String accessToken = generateToken(user, false);
+        String refreshToken = generateToken(user, true);
+
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .authenticated(true)
+                .expiresIn(VALID_DURATION)
+                .tokenType("Bearer")
+                .build();
     }
 
 }

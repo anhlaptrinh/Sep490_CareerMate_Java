@@ -3,10 +3,7 @@ package com.fpt.careermate.services.job_services.service.impl;
 import com.fpt.careermate.common.response.PageResponse;
 import com.fpt.careermate.services.job_services.service.dto.request.JobPostingApprovalRequest;
 import com.fpt.careermate.services.job_services.service.dto.request.JobPostingCreationRequest;
-import com.fpt.careermate.services.job_services.service.dto.response.JobPostingForAdminResponse;
-import com.fpt.careermate.services.job_services.service.dto.response.JobPostingForCandidateResponse;
-import com.fpt.careermate.services.job_services.service.dto.response.JobPostingForRecruiterResponse;
-import com.fpt.careermate.services.job_services.service.dto.response.PageJobPostingForRecruiterResponse;
+import com.fpt.careermate.services.job_services.service.dto.response.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -42,8 +39,10 @@ public interface JobPostingService {
     JobPostingForCandidateResponse getJobPostingDetailForCandidate(int id);
 
     PageJobPostingForRecruiterResponse getAllJobPostingsPublic(
-            int page, int size, String keyword, int recruiterId
+            int page, int size, String keyword, int recruiterId, int candidateId
     );
 
     JobPostingForCandidateResponse.RecruiterCompanyInfo getCompanyDetail(int recruiterId);
+    PageRecruiterResponse getCompanies(int page, int size, String companyAddress);
+    List<String> getAddresses(String keyword, int limit);
 }

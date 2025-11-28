@@ -27,6 +27,8 @@ public interface BlogService {
 
     Page<BlogResponse> searchBlogs(String keyword, String status, Pageable pageable);
 
+    Page<BlogResponse> filterBlogs(String keyword, String status, String category, Pageable pageable);
+
     List<String> getAllCategories();
 
     BlogResponse publishBlog(Long blogId);
@@ -38,4 +40,10 @@ public interface BlogService {
     BlogResponse unarchiveBlog(Long blogId);
 
     void incrementViewCount(Long blogId);
+    
+    BlogResponse getBlogBySlug(String slug);
+    
+    void incrementViewCountBySlug(String slug);
+    
+    List<BlogResponse> getRelatedBlogs(Long blogId, int limit);
 }

@@ -3,6 +3,8 @@ package com.fpt.careermate.services.job_services.domain;
 import com.fpt.careermate.services.profile_services.domain.WorkModel;
 import com.fpt.careermate.services.recruiter_services.domain.Recruiter;
 import com.fpt.careermate.services.account_services.domain.Account;
+import com.fpt.careermate.services.admin_services.domain.Admin;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -11,7 +13,6 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-
 
 @Getter
 @Setter
@@ -25,7 +26,7 @@ public class JobPosting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     String title;
 
     @NotBlank
@@ -58,29 +59,38 @@ public class JobPosting {
 
     @ManyToOne
     @JoinColumn(name = "approved_by")
-    Account approvedBy;
+    Admin approvedBy;
 
+    @Builder.Default
     @OneToMany(mappedBy = "jobPosting", cascade = CascadeType.ALL)
-    Set<JobDescription> jobDescriptions;
+    Set<JobDescription> jobDescriptions = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "recruiter_id", nullable = false)
     Recruiter recruiter;
 
+    @Builder.Default
     @OneToMany(mappedBy = "jobPosting", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<JobApply> jobApplies = new HashSet<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "jobPosting", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<JobFeedback> jobFeedbacks = new HashSet<>();
 
     @Column(nullable = false)
     int yearsOfExperience;
 
+    @Column(columnDefinition = "TEXT")
     String reason;
+    @Column(columnDefinition = "TEXT")
     String jobPackage;
 
     @Column(name = "salary_range")
     String salaryRange;
 
     String workModel;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "jobPosting", cascade = CascadeType.ALL, orphanRemoval = true)
+    Set<SavedJob> savedJobs = new HashSet<>();
 }

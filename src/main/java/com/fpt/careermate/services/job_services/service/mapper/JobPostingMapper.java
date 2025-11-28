@@ -3,10 +3,7 @@ package com.fpt.careermate.services.job_services.service.mapper;
 import com.fpt.careermate.services.job_services.domain.JobDescription;
 import com.fpt.careermate.services.job_services.domain.JobPosting;
 import com.fpt.careermate.services.job_services.service.dto.request.JobPostingCreationRequest;
-import com.fpt.careermate.services.job_services.service.dto.response.JobPostingForCandidateResponse;
-import com.fpt.careermate.services.job_services.service.dto.response.JobPostingForRecruiterResponse;
-import com.fpt.careermate.services.job_services.service.dto.response.JobPostingSkillResponse;
-import com.fpt.careermate.services.job_services.service.dto.response.PageJobPostingForRecruiterResponse;
+import com.fpt.careermate.services.job_services.service.dto.response.*;
 import com.fpt.careermate.services.recruiter_services.domain.Recruiter;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -18,12 +15,25 @@ import java.util.Set;
 @Mapper(componentModel = "spring")
 public interface JobPostingMapper {
     @Mapping(target = "workModel", ignore = true)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "status", ignore = true)
+    @Mapping(target = "createAt", ignore = true)
+    @Mapping(target = "rejectionReason", ignore = true)
+    @Mapping(target = "approvedBy", ignore = true)
+    @Mapping(target = "jobDescriptions", ignore = true)
+    @Mapping(target = "recruiter", ignore = true)
+    @Mapping(target = "jobApplies", ignore = true)
+    @Mapping(target = "jobFeedbacks", ignore = true)
+    @Mapping(target = "savedJobs", ignore = true)
     JobPosting toJobPosting(JobPostingCreationRequest request);
 
-
-
     @Mapping(target = "postTime", source = "createAt")
+    @Mapping(target = "skills", ignore = true)
     JobPostingForRecruiterResponse toJobPostingDetailForRecruiterResponse(JobPosting jobPosting);
+
+    @Mapping(source = "jdSkill.name", target = "name")
+    @Mapping(source = "jdSkill.id", target = "id")
+    JobPostingSkillResponse toJobPostingSkillResponse(JobDescription jobDescription);
 
     Set<JobPostingSkillResponse> toJobPostingSkillResponseSet(Set<JobDescription> jobDescriptions);
 
@@ -31,13 +41,21 @@ public interface JobPostingMapper {
     @Mapping(target = "postTime", source = "createAt")
     @Mapping(target = "skills", ignore = true)
     @Mapping(target = "recruiterInfo", ignore = true)
+    @Mapping(target = "isSaved", ignore = true)
     JobPostingForCandidateResponse toJobPostingForCandidateResponse(JobPosting jobPosting);
 
     List<JobPostingForCandidateResponse> toJobPostingForCandidateResponseList(List<JobPosting> jobPostings);
 
     PageJobPostingForRecruiterResponse toPageJobPostingForRecruiterResponse(Page<JobPosting> pageJobPosting);
 
+    PageJobPostingForCandidateResponse toPageJobPostingForCandidateResponse(Page<JobPosting> pageJobPosting);
+
     @Mapping(source = "id", target = "recruiterId")
     JobPostingForCandidateResponse.RecruiterCompanyInfo toRecruiterCompanyInfo(Recruiter recruiter);
 
+    PageRecruiterResponse toPageRecruiterResponse(Page<Recruiter> pageRecruiter);
+
+    @Mapping(target = "jobCount", ignore = true)
+    RecruiterResponse toRecruiterResponse(Recruiter recruiter);
+    List<RecruiterResponse> toRecruiterResponseList(List<Recruiter> recruiters);
 }

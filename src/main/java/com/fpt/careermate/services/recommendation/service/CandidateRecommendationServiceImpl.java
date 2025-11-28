@@ -50,8 +50,7 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
     public RecommendationResponseDTO getRecommendedCandidatesForJob(
             int jobPostingId,
             Integer maxCandidates,
-            Double minMatchScore
-    ) {
+            Double minMatchScore) {
         long startTime = System.currentTimeMillis();
 
         // Validate and get job posting
@@ -105,8 +104,7 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
                 requiredSkills,
                 jobPosting.getYearsOfExperience(),
                 limit,
-                threshold
-        );
+                threshold);
 
         long processingTime = System.currentTimeMillis() - startTime;
         log.info("Found {} recommended candidates for job '{}' in {}ms",
@@ -125,14 +123,13 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             List<String> requiredSkills,
             int minYearsExperience,
             int limit,
-            double threshold
-    ) {
+            double threshold) {
         try {
             // Create semantic search query from skills
             String searchQuery = String.join(" ", requiredSkills);
             log.info("🔎 Searching Weaviate with semantic query: '{}' (limit: {})", searchQuery, limit);
 
-            Field[] fields = new Field[]{
+            Field[] fields = new Field[] {
                     Field.builder().name("candidateId").build(),
                     Field.builder().name("candidateName").build(),
                     Field.builder().name("email").build(),
@@ -141,7 +138,7 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
                     Field.builder().name("aboutMe").build(),
                     Field.builder()
                             .name("_additional")
-                            .fields(new Field[]{
+                            .fields(new Field[] {
                                     Field.builder().name("distance").build(),
                                     Field.builder().name("certainty").build()
                             })
@@ -155,7 +152,7 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             Result<GraphQLResponse> result = weaviateClient.graphQL().get()
                     .withClassName(CANDIDATE_CLASS)
                     .withNearText(weaviateClient.graphQL().arguments().nearTextArgBuilder()
-                            .concepts(new String[]{searchQuery})
+                            .concepts(new String[] { searchQuery })
                             .certainty(0.3f) // Lower threshold for initial fetch
                             .build())
                     .withLimit(limit * 3) // Fetch more candidates to filter and rank
@@ -186,21 +183,23 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             List<String> requiredSkills,
             int minYearsExperience,
             int limit,
-            double threshold
-    ) {
+            double threshold) {
         List<CandidateRecommendationDTO> recommendations = new ArrayList<>();
 
         try {
             Object dataObj = response.getData();
-            if (dataObj == null || !(dataObj instanceof Map)) return recommendations;
+            if (dataObj == null || !(dataObj instanceof Map))
+                return recommendations;
 
             Map<String, Object> data = (Map<String, Object>) dataObj;
             Object getObj = data.get("Get");
-            if (getObj == null || !(getObj instanceof Map)) return recommendations;
+            if (getObj == null || !(getObj instanceof Map))
+                return recommendations;
 
             Map<String, Object> get = (Map<String, Object>) getObj;
             Object candidatesObj = get.get(CANDIDATE_CLASS);
-            if (candidatesObj == null || !(candidatesObj instanceof List)) return recommendations;
+            if (candidatesObj == null || !(candidatesObj instanceof List))
+                return recommendations;
 
             List<Map<String, Object>> candidates = (List<Map<String, Object>>) candidatesObj;
 
@@ -209,7 +208,8 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             for (Map<String, Object> candidate : candidates) {
                 try {
                     Object candidateIdObj = candidate.get("candidateId");
-                    if (candidateIdObj == null) continue;
+                    if (candidateIdObj == null)
+                        continue;
                     int candidateId = ((Number) candidateIdObj).intValue();
 
                     String candidateName = (String) candidate.get("candidateName");
@@ -258,7 +258,8 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
                         }
                     }
 
-                    // Improved scoring: 50% exact skill match, 40% semantic similarity, 10% experience
+                    // Improved scoring: 50% exact skill match, 40% semantic similarity, 10%
+                    // experience
                     // This prioritizes candidates with actual matching skills
                     double baseScore = (skillMatchScore * 0.5) + (semanticScore * 0.4);
                     double combinedScore = baseScore * experienceFactor;
@@ -303,7 +304,8 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             // Sort by combined score (descending) and then by years of experience
             filtered.sort((a, b) -> {
                 int scoreCompare = Double.compare(b.getMatchScore(), a.getMatchScore());
-                if (scoreCompare != 0) return scoreCompare;
+                if (scoreCompare != 0)
+                    return scoreCompare;
                 return Integer.compare(b.getTotalYearsExperience(), a.getTotalYearsExperience());
             });
 
@@ -325,21 +327,23 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             List<String> requiredSkills,
             int minYearsExperience,
             int limit,
-            double threshold
-    ) {
+            double threshold) {
         List<CandidateRecommendationDTO> recommendations = new ArrayList<>();
 
         try {
             Object dataObj = response.getData();
-            if (dataObj == null || !(dataObj instanceof Map)) return recommendations;
+            if (dataObj == null || !(dataObj instanceof Map))
+                return recommendations;
 
             Map<String, Object> data = (Map<String, Object>) dataObj;
             Object getObj = data.get("Get");
-            if (getObj == null || !(getObj instanceof Map)) return recommendations;
+            if (getObj == null || !(getObj instanceof Map))
+                return recommendations;
 
             Map<String, Object> get = (Map<String, Object>) getObj;
             Object candidatesObj = get.get(CANDIDATE_CLASS);
-            if (candidatesObj == null || !(candidatesObj instanceof List)) return recommendations;
+            if (candidatesObj == null || !(candidatesObj instanceof List))
+                return recommendations;
 
             List<Map<String, Object>> candidates = (List<Map<String, Object>>) candidatesObj;
 
@@ -348,7 +352,8 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             for (Map<String, Object> candidate : candidates) {
                 try {
                     Object candidateIdObj = candidate.get("candidateId");
-                    if (candidateIdObj == null) continue;
+                    if (candidateIdObj == null)
+                        continue;
                     int candidateId = ((Number) candidateIdObj).intValue();
 
                     String candidateName = (String) candidate.get("candidateName");
@@ -365,8 +370,10 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
                     String aboutMe = (String) candidate.get("aboutMe");
 
                     // Note: We don't filter by experience as a hard requirement.
-                    // Instead, experience is used as a secondary ranking factor after skill matching.
-                    // This allows candidates with matching skills but less experience to still be recommended.
+                    // Instead, experience is used as a secondary ranking factor after skill
+                    // matching.
+                    // This allows candidates with matching skills but less experience to still be
+                    // recommended.
                     // Recruiters can see the experience level and make their own decision.
 
                     // Use SkillMatcher for intelligent skill matching with synonyms and hierarchy
@@ -378,7 +385,6 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
 
                     // Calculate enhanced match score with synonym matching and hierarchy bonus
                     double matchScore = skillMatcher.calculateEnhancedMatchScore(requiredSkills, candidateSkills);
-
 
                     // Apply minMatchScore threshold
                     if (matchScore < threshold) {
@@ -413,7 +419,8 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             // Sort by match score (descending) and then by years of experience (descending)
             recommendations.sort((a, b) -> {
                 int scoreCompare = Double.compare(b.getMatchScore(), a.getMatchScore());
-                if (scoreCompare != 0) return scoreCompare;
+                if (scoreCompare != 0)
+                    return scoreCompare;
                 return Integer.compare(b.getTotalYearsExperience(), a.getTotalYearsExperience());
             });
 
@@ -436,11 +443,12 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
             log.info("🔄 Refreshing candidate {} profile in Weaviate", candidateId);
 
             // Get candidate's resume
-            Resume resume = resumeRepo.findByCandidate_CandidateId(candidateId)
-                    .orElseThrow(() -> {
-                        log.warn("❌ No resume found for candidate ID: {}", candidateId);
-                        return new AppException(ErrorCode.RESUME_NOT_FOUND);
-                    });
+            List<Resume> resumes = resumeRepo.findByCandidateCandidateId(candidateId);
+            if (resumes.isEmpty()) {
+                log.warn("❌ No resume found for candidate ID: {}", candidateId);
+                throw new AppException(ErrorCode.RESUME_NOT_FOUND);
+            }
+            Resume resume = resumes.get(0);
 
             log.info("📋 Refreshing candidate {} with comprehensive profile data", candidateId);
 
@@ -486,21 +494,21 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
                     }
 
                     log.info("📝 Refreshing candidate {} profile...",
-                        resume.getCandidate().getCandidateId());
+                            resume.getCandidate().getCandidateId());
 
                     candidateWeaviateService.storeCandidateProfile(resume);
                     successCount++;
 
                 } catch (Exception e) {
                     log.error("❌ Failed to refresh candidate {}: {}",
-                        resume.getCandidate() != null ? resume.getCandidate().getCandidateId() : "unknown",
-                        e.getMessage());
+                            resume.getCandidate() != null ? resume.getCandidate().getCandidateId() : "unknown",
+                            e.getMessage());
                     failCount++;
                 }
             }
 
             log.info("✅ Profile refresh completed: {} succeeded, {} failed, {} skipped",
-                successCount, failCount, skippedCount);
+                    successCount, failCount, skippedCount);
 
         } catch (Exception e) {
             log.error("❌ Error during batch profile refresh: {}", e.getMessage(), e);
@@ -561,8 +569,8 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
                 skipText2vec.put("vectorizePropertyName", false);
                 skipConfig.put("text2vec-weaviate", skipText2vec);
 
-                io.weaviate.client.v1.schema.model.WeaviateClass weaviateClass =
-                        io.weaviate.client.v1.schema.model.WeaviateClass.builder()
+                io.weaviate.client.v1.schema.model.WeaviateClass weaviateClass = io.weaviate.client.v1.schema.model.WeaviateClass
+                        .builder()
                         .className(CANDIDATE_CLASS)
                         .description("Comprehensive candidate profiles with qualifications for AI-powered matching")
                         .vectorizer("text2vec-weaviate")
@@ -660,7 +668,8 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
                                 io.weaviate.client.v1.schema.model.Property.builder()
                                         .name("profileSummary")
                                         .dataType(Arrays.asList("text"))
-                                        .description("Comprehensive profile summary combining all qualifications - vectorized")
+                                        .description(
+                                                "Comprehensive profile summary combining all qualifications - vectorized")
                                         .moduleConfig(vectorizedConfig)
                                         .build(),
 
@@ -670,8 +679,7 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
                                         .dataType(Arrays.asList("text"))
                                         .description("Last update timestamp")
                                         .moduleConfig(skipConfig)
-                                        .build()
-                        ))
+                                        .build()))
                         .build();
 
                 Result<Boolean> createResult = weaviateClient.schema().classCreator()
@@ -729,4 +737,3 @@ public class CandidateRecommendationServiceImpl implements CandidateRecommendati
         }
     }
 }
-

@@ -21,6 +21,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
@@ -30,7 +31,9 @@ public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     public String[] PUBLIC_ENDPOINTS = {
-            "/api/users", "/api/auth/token", "/api/auth/introspect", "/api/auth/logout", "/api/auth/refresh",
+            "/api/users", "/api/auth/token", "/api/auth/token/candidate", "/api/auth/introspect", "/api/auth/logout",
+            "/api/auth" +
+                    "/refresh",
             "/api/users/verify-email/**",
             "/api/users/verify-otp",
             "/api/users/change-password/**",
@@ -40,21 +43,26 @@ public class SecurityConfig {
             "/api/oauth2/recruiter/complete-registration",
             "/api/registration/recruiter",
             "/api/v1/auth/**",
+            "/api/users/sign-up",
+            "/api/auth/refresh/mobile",
 
             "/v3/api-docs/**",
             "/v3/api-docs.yaml",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/api/payment/return",
-            // Public blog endpoints - no authentication required
-            "/blogs",
-            "/blogs/**",
+            "/api/candidate-payment/return",
             // Public file upload for recruiter logos during registration
             "/api/upload/recruiter-logo-public",
             "api/coach/course/recommendation",
             // Public job postings endpoints - no authentication required
             "/api/job-postings",
-            "/api/job-postings/**"
+            "/api/job-postings/**",
+            // Actuator endpoints for monitoring (consider securing these in production)
+            "/actuator/**",
+            "/api/job-postings/**",
+            "/api/jdskill/top-used",
+            "/api/saved-jobs/jobs-for-candidate",
+            "/api/recruiter-payment/return"
     };
     @Autowired
     private CustomJwtDecoder customJwtDecoder;
@@ -65,6 +73,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults()) // 👈 enable CORS support
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
+                        // Public blog endpoints - anyone can read blogs
+                        .requestMatchers(HttpMethod.GET, "/api/blogs", "/api/blogs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/blogs", "/blogs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/files/**").permitAll()
                         .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
@@ -95,7 +105,9 @@ public class SecurityConfig {
 //                "file://*"  // Allow direct HTML file access for testing
 //        ));
         // Also allow null origin (for file:// protocol)
-        corsConfiguration.addAllowedOrigin("*");
+//        corsConfiguration.addAllowedOrigin("*");
+
+        corsConfiguration.setAllowedOriginPatterns(Collections.singletonList("*"));
 
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addAllowedHeader("*");

@@ -48,4 +48,23 @@ public interface JobPostingRepo extends JpaRepository<JobPosting, Integer> {
     Page<JobPosting> findByRecruiterIdAndTitleContainingIgnoreCase(
             int recruiterId, String keyword, Pageable pageable
     );
+
+    long countByRecruiterIdAndStatus(int recruiterId, String status);
+
+    Page<JobPosting> findAllByStatusAndRecruiter_VerificationStatus(
+            String status, String verificationStatus, Pageable pageable
+    );
+
+    @Query("SELECT COUNT(jp) FROM job_posting jp WHERE jp.recruiter.id = :recruiterId " +
+           "AND MONTH(jp.createAt) = :month AND YEAR(jp.createAt) = :year")
+    int countByRecruiterAndMonth(@Param("recruiterId") int recruiterId,
+                                 @Param("month") int month,
+                                 @Param("year") int year);
+
+    // New: Fetch a job posting with its jobDescriptions and associated jdSkill eagerly to avoid lazy loading issues
+    @Query("SELECT DISTINCT jp FROM job_posting jp " +
+           "LEFT JOIN FETCH jp.jobDescriptions jd " +
+           "LEFT JOIN FETCH jd.jdSkill " +
+           "WHERE jp.id = :id")
+    Optional<JobPosting> fetchByIdWithSkills(@Param("id") int id);
 }
